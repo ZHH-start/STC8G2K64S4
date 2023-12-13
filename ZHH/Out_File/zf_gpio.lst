@@ -1,0 +1,212 @@
+C51 COMPILER V9.60.0.0   ZF_GPIO                                                           12/08/2023 20:31:20 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE ZF_GPIO
+OBJECT MODULE PLACED IN .\Out_File\zf_gpio.obj
+COMPILER INVOKED BY: C:\Keil_v5_C51\C51\BIN\C51.EXE ..\Libraries\seekfree_libraries\zf_gpio.c LARGE OMF2 OPTIMIZE(8,SPEE
+                    -D) BROWSE INCDIR(..\Libraries\libraries;..\Libraries\seekfree_libraries;..\Libraries\seekfree_peripheral;..\USER;..\CODE
+                    -) DEBUG PRINT(.\Out_File\zf_gpio.lst) TABS(2) OBJECT(.\Out_File\zf_gpio.obj)
+
+line level    source
+
+   1          #include "zf_gpio.h"
+   2          
+   3          #define PxPU_BASE_ADDR  0xFE10 
+   4          
+   5          //--------------------------------------------------------------------------------------------------------
+             ------------
+   6          //  @brief      GPIO设置引脚上拉电阻设置
+   7          //  @param      pin         选择引脚（P0_0-P5_4）
+   8          //  @param      pull        设置上下拉电阻 NOPULL:不设置 PULLUP:上拉
+   9          //  @return     void
+  10          //  Sample usage:           gpio_pull_set(P0_0,NOPULL);       // 设置P0.0引脚没有上下拉电阻
+  11          //--------------------------------------------------------------------------------------------------------
+             ------------
+  12          void gpio_pull_set(PIN_enum pin, PULL_enum pull)
+  13          {
+  14   1        if(PULLUP == pull)
+  15   1        {
+  16   2          (*(unsigned char volatile xdata *)(PxPU_BASE_ADDR + (pin >> 4))) |= (1<<(pin&0x0F));
+  17   2        }
+  18   1        else if(NOPULL == pull)
+  19   1        {
+  20   2          (*(unsigned char volatile xdata *)(PxPU_BASE_ADDR + (pin >> 4))) &= ~(1<<(pin&0x0F));
+  21   2        }
+  22   1      }
+  23          
+  24          
+  25          
+  26          //--------------------------------------------------------------------------------------------------------
+             ------------
+  27          //  @brief      GPIO设置引脚模式
+  28          //  @param      pin         选择引脚（P0_0-P5_4）
+  29          //  @param      mode        引脚模式 GPIO:准双向口, GPO_PP:推挽输出, GPI_IMPEDANCE:高阻输入, GPI_OD:开漏输
+             -出
+  30          //  @return     void
+  31          //  Sample usage:           gpio_mode(P0_0,GPIO);       // 设置P0.0设置为双向IO
+  32          //--------------------------------------------------------------------------------------------------------
+             ------------
+  33          void gpio_mode(PIN_enum pin, GPIOMODE_enum mode)
+  34          {
+  35   1        if(GPIO == mode)
+  36   1        {
+  37   2          if(0x00 == (pin&0xF0))  //P0
+  38   2          {
+  39   3            P0M1 &= ~(1<<(pin&0xF));
+  40   3            P0M0 &= ~(1<<(pin&0xF));
+  41   3          }
+  42   2          if(0x10 == (pin&0xF0))  //P1
+  43   2          {
+  44   3            P1M1 &= ~(1<<(pin&0xF));
+  45   3            P1M0 &= ~(1<<(pin&0xF));
+  46   3          }
+  47   2          if(0x20 == (pin&0xF0))  //P2
+  48   2          {
+C51 COMPILER V9.60.0.0   ZF_GPIO                                                           12/08/2023 20:31:20 PAGE 2   
+
+  49   3            P2M1 &= ~(1<<(pin&0xF));
+  50   3            P2M0 &= ~(1<<(pin&0xF));
+  51   3          }
+  52   2          
+  53   2          if(0x30 == (pin&0xF0))  //P3
+  54   2          {
+  55   3            P3M1 &= ~(1<<(pin&0xF));
+  56   3            P3M0 &= ~(1<<(pin&0xF));
+  57   3          }
+  58   2          if(0x40 == (pin&0xF0))  //P4
+  59   2          {
+  60   3            P4M1 &= ~(1<<(pin&0xF));
+  61   3            P4M0 &= ~(1<<(pin&0xF));
+  62   3          }
+  63   2          if(0x50 == (pin&0xF0))  //P5
+  64   2          {
+  65   3            P5M1 &= ~(1<<(pin&0xF));
+  66   3            P5M0 &= ~(1<<(pin&0xF));
+  67   3          }
+  68   2        }
+  69   1        else if(GPO_PP == mode)
+  70   1        {
+  71   2          if(0x00 == (pin&0xF0))  //P0
+  72   2          {
+  73   3            P0M1 &= ~(1<<(pin&0xF));
+  74   3            P0M0 |=  (1<<(pin&0xF));
+  75   3          }
+  76   2          if(0x10 == (pin&0xF0))  //P1
+  77   2          {
+  78   3            P1M1 &= ~(1<<(pin&0xF));
+  79   3            P1M0 |=  (1<<(pin&0xF));
+  80   3          }
+  81   2          if(0x20 == (pin&0xF0))  //P2
+  82   2          {
+  83   3            P2M1 &= ~(1<<(pin&0xF));
+  84   3            P2M0 |=  (1<<(pin&0xF));
+  85   3          }
+  86   2          
+  87   2          if(0x30 == (pin&0xF0))  //P3
+  88   2          {
+  89   3            P3M1 &= ~(1<<(pin&0xF));
+  90   3            P3M0 |=  (1<<(pin&0xF));
+  91   3          }
+  92   2          if(0x40 == (pin&0xF0))  //P4
+  93   2          {
+  94   3            P4M1 &= ~(1<<(pin&0xF));
+  95   3            P4M0 |=  (1<<(pin&0xF));
+  96   3          }
+  97   2          if(0x50 == (pin&0xF0))  //P5
+  98   2          {
+  99   3            P5M1 &= ~(1<<(pin&0xF));
+ 100   3            P5M0 |=  (1<<(pin&0xF));
+ 101   3          }
+ 102   2        }
+ 103   1        else if(GPI_IMPEDANCE == mode)
+ 104   1        {
+ 105   2          if(0x00 == (pin&0xF0))  //P0
+ 106   2          {
+ 107   3            P0M1 |=  (1<<(pin&0xF));
+ 108   3            P0M0 &= ~(1<<(pin&0xF));
+ 109   3          }
+ 110   2          if(0x10 == (pin&0xF0))  //P1
+C51 COMPILER V9.60.0.0   ZF_GPIO                                                           12/08/2023 20:31:20 PAGE 3   
+
+ 111   2          {
+ 112   3            P1M1 |=  (1<<(pin&0xF));
+ 113   3            P1M0 &= ~(1<<(pin&0xF));
+ 114   3          }
+ 115   2          if(0x20 == (pin&0xF0))  //P2
+ 116   2          {
+ 117   3            P2M1 |=  (1<<(pin&0xF));
+ 118   3            P2M0 &= ~(1<<(pin&0xF));
+ 119   3          }
+ 120   2          
+ 121   2          if(0x30 == (pin&0xF0))  //P3
+ 122   2          {
+ 123   3            P3M1 |=  (1<<(pin&0xF));
+ 124   3            P3M0 &= ~(1<<(pin&0xF));
+ 125   3          }
+ 126   2          if(0x40 == (pin&0xF0))  //P4
+ 127   2          {
+ 128   3            P4M1 |=  (1<<(pin&0xF));
+ 129   3            P4M0 &= ~(1<<(pin&0xF));
+ 130   3          }
+ 131   2          if(0x50 == (pin&0xF0))  //P5
+ 132   2          {
+ 133   3            P5M1 |=  (1<<(pin&0xF));
+ 134   3            P5M0 &= ~(1<<(pin&0xF));
+ 135   3          }
+ 136   2        }
+ 137   1        else if(GPI_OD == mode)
+ 138   1        {
+ 139   2          if(0x00 == (pin&0xF0))  //P0
+ 140   2          {
+ 141   3            P0M1 |= (1<<(pin&0xF));
+ 142   3            P0M0 |= (1<<(pin&0xF));
+ 143   3          }
+ 144   2          if(0x10 == (pin&0xF0))  //P1
+ 145   2          {
+ 146   3            P1M1 |= (1<<(pin&0xF));
+ 147   3            P1M0 |= (1<<(pin&0xF));
+ 148   3          }
+ 149   2          if(0x20 == (pin&0xF0))  //P2
+ 150   2          {
+ 151   3            P2M1 |= (1<<(pin&0xF));
+ 152   3            P2M0 |= (1<<(pin&0xF));
+ 153   3          }
+ 154   2          
+ 155   2          if(0x30 == (pin&0xF0))  //P3
+ 156   2          {
+ 157   3            P3M1 |= (1<<(pin&0xF));
+ 158   3            P3M0 |= (1<<(pin&0xF));
+ 159   3          }
+ 160   2          if(0x40 == (pin&0xF0))  //P4
+ 161   2          {
+ 162   3            P4M1 |= (1<<(pin&0xF));
+ 163   3            P4M0 |= (1<<(pin&0xF));
+ 164   3          }
+ 165   2          if(0x50 == (pin&0xF0))  //P5
+ 166   2          {
+ 167   3            P5M1 |= (1<<(pin&0xF));
+ 168   3            P5M0 |= (1<<(pin&0xF));
+ 169   3          }
+ 170   2        }
+ 171   1      }
+ 172          
+C51 COMPILER V9.60.0.0   ZF_GPIO                                                           12/08/2023 20:31:20 PAGE 4   
+
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    780    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

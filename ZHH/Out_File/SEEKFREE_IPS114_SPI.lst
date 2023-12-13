@@ -1,0 +1,1200 @@
+C51 COMPILER V9.60.0.0   SEEKFREE_IPS114_SPI                                               12/08/2023 20:31:22 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE SEEKFREE_IPS114_SPI
+OBJECT MODULE PLACED IN .\Out_File\SEEKFREE_IPS114_SPI.obj
+COMPILER INVOKED BY: C:\Keil_v5_C51\C51\BIN\C51.EXE ..\Libraries\seekfree_peripheral\SEEKFREE_IPS114_SPI.c LARGE OMF2 OP
+                    -TIMIZE(8,SPEED) BROWSE INCDIR(..\Libraries\libraries;..\Libraries\seekfree_libraries;..\Libraries\seekfree_peripheral;..
+                    -\USER;..\CODE) DEBUG PRINT(.\Out_File\SEEKFREE_IPS114_SPI.lst) TABS(2) OBJECT(.\Out_File\SEEKFREE_IPS114_SPI.obj)
+
+line level    source
+
+   1          /*********************************************************************************************************
+             -************
+   2           * COPYRIGHT NOTICE
+   3           * Copyright (c) 2018,逐飞科技
+   4           * All rights reserved.
+   5           * 技术讨论QQ群：一群：179029047(已满)  二群：244861897(已满)  三群：824575535
+   6           *
+   7           * 以下所有内容版权均属逐飞科技所有，未经允许不得用于商业用途，
+   8           * 欢迎各位使用并传播本程序，修改内容时必须保留逐飞科技的版权声明。
+   9           *
+  10           * @file          main
+  11           * @company       成都逐飞科技有限公司
+  12           * @author        逐飞科技(QQ3184284598)
+  13           * @version       查看doc内version文件 版本说明
+  14           * @Software    IAR 8.3 or MDK 5.24
+  15           * @Taobao      https://seekfree.taobao.com/
+  16           * @date          2019-11-15
+  17           * @note    
+  18                    接线定义：
+  19                    ------------------------------------ 
+  20                    1.14寸IPS模块管脚       单片机管脚
+  21                    SCL                   查看SEEKFREE_IPS114_SPI.h文件内的IPS114_SCL   宏定义     硬件SPI引脚不可随意切换
+  22                    SDA                   查看SEEKFREE_IPS114_SPI.h文件内的IPS114_SDA   宏定义     硬件SPI引脚不可随意切换
+  23                    RES                   查看SEEKFREE_IPS114_SPI.h文件内的IPS114_REST_PIN宏定义    
+  24                    DC                    查看SEEKFREE_IPS114_SPI.h文件内的IPS114_DC_PIN  宏定义  
+  25                    CS                    查看SEEKFREE_IPS114_SPI.h文件内的IPS114_CS    宏定义     硬件SPI引脚不可随意切换
+  26                    BL            查看SEEKFREE_IPS114_SPI.h文件内的IPS114_BL_PIN  宏定义
+  27                    
+  28                    电源引脚
+  29                    VCC 3.3V电源
+  30                    GND 电源地
+  31                    最大分辨率135*240
+  32                    ------------------------------------ 
+  33           *********************************************************************************************************
+             -***********/
+  34           
+  35          
+  36          
+  37          
+  38          #include "SEEKFREE_IPS114_SPI.h"
+  39          #include "SEEKFREE_FONT.h"
+  40          #include "SEEKFREE_PRINTF.h"
+  41          #include "zf_spi.h"
+  42          #include "zf_pca_delay.h"
+  43          
+  44          
+  45          
+  46          
+  47          //--------------------------------------------------------------------------------------------------------
+             ------------
+  48          //  以下函数是使用软件SPI通信，相比较硬件SPI，软件SPI引脚更加灵活，可以使用任意普通IO
+  49          //--------------------------------------------------------------------------------------------------------
+             ------------
+C51 COMPILER V9.60.0.0   SEEKFREE_IPS114_SPI                                               12/08/2023 20:31:22 PAGE 2   
+
+  50          
+  51          
+  52          
+  53          //--------------------------------------------------------------------------------------------------------
+             ------------
+  54          //  @brief      内部调用，用户无需关心
+  55          //  @param      void        
+  56          //  @return             
+  57          //  @since      v1.0
+  58          //  Sample usage:               
+  59          //--------------------------------------------------------------------------------------------------------
+             ------------
+  60          void ips114_writeIndex_simspi(uint8 dat)      //写命令
+  61          { 
+  62   1        uint8 i = 8;
+  63   1        IPS114_CS_SIMSPI(0);
+  64   1          IPS114_DC_SIMSPI(0);
+  65   1      
+  66   1        IPS114_SCL_SIMSPI(0);
+  67   1      
+  68   1        while(i--)
+  69   1        {
+  70   2          if(dat&0x80){IPS114_SDA_SIMSPI(1);}
+  71   2          else{IPS114_SDA_SIMSPI(0);}
+  72   2          IPS114_SCL_SIMSPI(1);
+  73   2      
+  74   2          IPS114_SCL_SIMSPI(0);
+  75   2          dat<<=1;
+  76   2        } 
+  77   1        IPS114_CS_SIMSPI(1);
+  78   1      }
+  79          
+  80          //--------------------------------------------------------------------------------------------------------
+             ------------
+  81          //  @brief      内部调用，用户无需关心
+  82          //  @param      void        
+  83          //  @return             
+  84          //  @since      v1.0
+  85          //  Sample usage:               
+  86          //--------------------------------------------------------------------------------------------------------
+             ------------
+  87          void ips114_writeData_simspi(uint8 dat)     //写数据
+  88          {
+  89   1        uint8 i = 8;
+  90   1        IPS114_CS_SIMSPI(0);
+  91   1          IPS114_DC_SIMSPI(1);
+  92   1      
+  93   1        IPS114_SCL_SIMSPI(0);
+  94   1      
+  95   1        while(i--)
+  96   1        {
+  97   2          if(dat&0x80){IPS114_SDA_SIMSPI(1);}
+  98   2          else{IPS114_SDA_SIMSPI(0);}
+  99   2          IPS114_SCL_SIMSPI(1);
+ 100   2      
+ 101   2          IPS114_SCL_SIMSPI(0);
+ 102   2          dat<<=1;
+ 103   2        } 
+ 104   1        IPS114_CS_SIMSPI(1);
+ 105   1      }
+ 106          
+ 107          //--------------------------------------------------------------------------------------------------------
+C51 COMPILER V9.60.0.0   SEEKFREE_IPS114_SPI                                               12/08/2023 20:31:22 PAGE 3   
+
+             ------------
+ 108          //  @brief      内部调用，用户无需关心
+ 109          //  @param      void        
+ 110          //  @return             
+ 111          //  @since      v1.0
+ 112          //  Sample usage:               
+ 113          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 114          void ips114_writeDatai_16bit_simspi(uint16 dat) //向液晶屏写一个16位数据
+ 115          {
+ 116   1          uint8 i=16;
+ 117   1        IPS114_CS_SIMSPI(0);
+ 118   1          IPS114_DC_SIMSPI(1);
+ 119   1          IPS114_SCL_SIMSPI(0);
+ 120   1        while(i--)
+ 121   1        {
+ 122   2            if(dat&0x8000){IPS114_SDA_SIMSPI(1);}
+ 123   2            else{IPS114_SDA_SIMSPI(0);}
+ 124   2            IPS114_SCL_SIMSPI(1);
+ 125   2          
+ 126   2            IPS114_SCL_SIMSPI(0);
+ 127   2            dat<<=1;
+ 128   2        }
+ 129   1        IPS114_CS_SIMSPI(1);
+ 130   1      }
+ 131          
+ 132          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 133          //  @brief      1.14寸 IPS液晶初始化
+ 134          //  @return     void
+ 135          //  @since      v1.0
+ 136          //  Sample usage:               
+ 137          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 138          void ips114_init_simspi(void)
+ 139          {
+ 140   1          
+ 141   1        IPS114_BL_SIMSPI(1);
+ 142   1        IPS114_DC_SIMSPI(0);
+ 143   1        IPS114_REST_SIMSPI(0);
+ 144   1        
+ 145   1          pca_delay_ms(200);
+ 146   1          
+ 147   1          IPS114_REST_SIMSPI(1);
+ 148   1          pca_delay_ms(100);
+ 149   1        
+ 150   1          ips114_writeIndex_simspi(0x36);
+ 151   1          
+ 152   1          if      (IPS114_DISPLAY_DIR==0)    ips114_writeData_simspi(0x00);
+ 153   1          else if (IPS114_DISPLAY_DIR==1)    ips114_writeData_simspi(0xC0);
+ 154   1          else if (IPS114_DISPLAY_DIR==2)    ips114_writeData_simspi(0x70);
+ 155   1          else                              ips114_writeData_simspi(0xA0);
+ 156   1          
+ 157   1          ips114_writeIndex_simspi(0x3A); 
+ 158   1          ips114_writeData_simspi(0x05);
+ 159   1      
+ 160   1          ips114_writeIndex_simspi(0xB2);
+ 161   1          ips114_writeData_simspi(0x0C);
+ 162   1          ips114_writeData_simspi(0x0C);
+ 163   1          ips114_writeData_simspi(0x00);
+ 164   1          ips114_writeData_simspi(0x33);
+ 165   1          ips114_writeData_simspi(0x33); 
+C51 COMPILER V9.60.0.0   SEEKFREE_IPS114_SPI                                               12/08/2023 20:31:22 PAGE 4   
+
+ 166   1      
+ 167   1          ips114_writeIndex_simspi(0xB7); 
+ 168   1          ips114_writeData_simspi(0x35);  
+ 169   1      
+ 170   1          ips114_writeIndex_simspi(0xBB);
+ 171   1          ips114_writeData_simspi(0x37);
+ 172   1      
+ 173   1          ips114_writeIndex_simspi(0xC0);
+ 174   1          ips114_writeData_simspi(0x2C);
+ 175   1      
+ 176   1          ips114_writeIndex_simspi(0xC2);
+ 177   1          ips114_writeData_simspi(0x01);
+ 178   1      
+ 179   1          ips114_writeIndex_simspi(0xC3);
+ 180   1          ips114_writeData_simspi(0x12);   
+ 181   1      
+ 182   1          ips114_writeIndex_simspi(0xC4);
+ 183   1          ips114_writeData_simspi(0x20);  
+ 184   1      
+ 185   1          ips114_writeIndex_simspi(0xC6); 
+ 186   1          ips114_writeData_simspi(0x0F);    
+ 187   1      
+ 188   1          ips114_writeIndex_simspi(0xD0); 
+ 189   1          ips114_writeData_simspi(0xA4);
+ 190   1          ips114_writeData_simspi(0xA1);
+ 191   1      
+ 192   1          ips114_writeIndex_simspi(0xE0);
+ 193   1          ips114_writeData_simspi(0xD0);
+ 194   1          ips114_writeData_simspi(0x04);
+ 195   1          ips114_writeData_simspi(0x0D);
+ 196   1          ips114_writeData_simspi(0x11);
+ 197   1          ips114_writeData_simspi(0x13);
+ 198   1          ips114_writeData_simspi(0x2B);
+ 199   1          ips114_writeData_simspi(0x3F);
+ 200   1          ips114_writeData_simspi(0x54);
+ 201   1          ips114_writeData_simspi(0x4C);
+ 202   1          ips114_writeData_simspi(0x18);
+ 203   1          ips114_writeData_simspi(0x0D);
+ 204   1          ips114_writeData_simspi(0x0B);
+ 205   1          ips114_writeData_simspi(0x1F);
+ 206   1          ips114_writeData_simspi(0x23);
+ 207   1      
+ 208   1          ips114_writeIndex_simspi(0xE1);
+ 209   1          ips114_writeData_simspi(0xD0);
+ 210   1          ips114_writeData_simspi(0x04);
+ 211   1          ips114_writeData_simspi(0x0C);
+ 212   1          ips114_writeData_simspi(0x11);
+ 213   1          ips114_writeData_simspi(0x13);
+ 214   1          ips114_writeData_simspi(0x2C);
+ 215   1          ips114_writeData_simspi(0x3F);
+ 216   1          ips114_writeData_simspi(0x44);
+ 217   1          ips114_writeData_simspi(0x51);
+ 218   1          ips114_writeData_simspi(0x2F);
+ 219   1          ips114_writeData_simspi(0x1F);
+ 220   1          ips114_writeData_simspi(0x1F);
+ 221   1          ips114_writeData_simspi(0x20);
+ 222   1          ips114_writeData_simspi(0x23);
+ 223   1      
+ 224   1          ips114_writeIndex_simspi(0x21); 
+ 225   1      
+ 226   1          ips114_writeIndex_simspi(0x11); 
+ 227   1          pca_delay_ms(120); 
+C51 COMPILER V9.60.0.0   SEEKFREE_IPS114_SPI                                               12/08/2023 20:31:22 PAGE 5   
+
+ 228   1      
+ 229   1          ips114_writeIndex_simspi(0x29);
+ 230   1          ips114_clear_simspi(IPS114_BGCOLOR);
+ 231   1      }
+ 232          
+ 233          
+ 234          
+ 235          void ips114_set_region_simspi(uint16 x1,uint16 y1,uint16 x2,uint16 y2)
+ 236          {
+ 237   1        #if(IPS114_DISPLAY_DIR==0)
+                {
+                  ips114_writeIndex_simspi(0x2a);//列地址设置
+                  ips114_writeDatai_16bit_simspi(x1+52);
+                  ips114_writeDatai_16bit_simspi(x2+52);
+                  ips114_writeIndex_simspi(0x2b);//行地址设置
+                  ips114_writeDatai_16bit_simspi(y1+40);
+                  ips114_writeDatai_16bit_simspi(y2+40);
+                  ips114_writeIndex_simspi(0x2c);//储存器写
+                }
+                #elif(IPS114_DISPLAY_DIR==1)
+                {
+                  ips114_writeIndex_simspi(0x2a);//列地址设置
+                  ips114_writeDatai_16bit_simspi(x1+53);
+                  ips114_writeDatai_16bit_simspi(x2+53);
+                  ips114_writeIndex_simspi(0x2b);//行地址设置
+                  ips114_writeDatai_16bit_simspi(y1+40);
+                  ips114_writeDatai_16bit_simspi(y2+40);
+                  ips114_writeIndex_simspi(0x2c);//储存器写
+                }
+                #elif(IPS114_DISPLAY_DIR==2)
+                {
+                  ips114_writeIndex_simspi(0x2a);//列地址设置
+                  ips114_writeDatai_16bit_simspi(x1+40);
+                  ips114_writeDatai_16bit_simspi(x2+40);
+                  ips114_writeIndex_simspi(0x2b);//行地址设置
+                  ips114_writeDatai_16bit_simspi(y1+53);
+                  ips114_writeDatai_16bit_simspi(y2+53);
+                  ips114_writeIndex_simspi(0x2c);//储存器写
+                }
+                #else
+ 268   1        {
+ 269   2          ips114_writeIndex_simspi(0x2a);//列地址设置
+ 270   2          ips114_writeDatai_16bit_simspi(x1+40);
+ 271   2          ips114_writeDatai_16bit_simspi(x2+40);
+ 272   2          ips114_writeIndex_simspi(0x2b);//行地址设置
+ 273   2          ips114_writeDatai_16bit_simspi(y1+52);
+ 274   2          ips114_writeDatai_16bit_simspi(y2+52);
+ 275   2          ips114_writeIndex_simspi(0x2c);//储存器写
+ 276   2        }
+ 277   1        #endif
+ 278   1      }
+ 279          
+ 280          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 281          //  @brief      液晶清屏函数
+ 282          //  @param      color         颜色设置
+ 283          //  @return     void
+ 284          //  @since      v1.0
+ 285          //  Sample usage:               ips114_clear(YELLOW);// 全屏设置为黄色
+ 286          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 287          void ips114_clear_simspi(uint16 color)
+C51 COMPILER V9.60.0.0   SEEKFREE_IPS114_SPI                                               12/08/2023 20:31:22 PAGE 6   
+
+ 288          {
+ 289   1          uint16 i,j;
+ 290   1        ips114_set_region_simspi(0,0,IPS114_X_MAX-1,IPS114_Y_MAX-1);
+ 291   1          for(i=0;i<IPS114_X_MAX;i++)
+ 292   1          {
+ 293   2              for (j=0;j<IPS114_Y_MAX;j++)
+ 294   2            {
+ 295   3                ips114_writeDatai_16bit_simspi(color);         
+ 296   3            }
+ 297   2          }
+ 298   1      }
+ 299          
+ 300          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 301          //  @brief      液晶画点
+ 302          //  @param      x               坐标x方向的起点
+ 303          //  @param      y               坐标y方向的起点
+ 304          //  @param      dat             需要显示的颜色
+ 305          //  @return     void
+ 306          //  @since      v1.0
+ 307          //  Sample usage:               ips114_drawpoint(0,0,RED);  //坐标0,0画一个红色的点
+ 308          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 309          void ips114_drawpoint_simspi(uint16 x,uint16 y,uint16 color)
+ 310          {
+ 311   1          ips114_set_region_simspi(x,y,x,y);
+ 312   1          ips114_writeDatai_16bit_simspi(color);
+ 313   1      }
+ 314          
+ 315          
+ 316          
+ 317          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 318          //  @brief      液晶显示字符
+ 319          //  @param      x               坐标x方向的起点 参数范围 0 -（IPS114_X_MAX-1）
+ 320          //  @param      y               坐标y方向的起点 参数范围 0 -（IPS114_Y_MAX/16-1）
+ 321          //  @param      dat             需要显示的字符
+ 322          //  @return     void
+ 323          //  @since      v1.0
+ 324          //  Sample usage:               ips114_showchar(0,0,'x');//坐标0,0写一个字符x
+ 325          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 326          void ips114_showchar_simspi(uint16 x,uint16 y,const int8 dat)
+ 327          {
+ 328   1        uint8 i,j;
+ 329   1        uint8 temp;
+ 330   1          
+ 331   1        for(i=0; i<16; i++)
+ 332   1        {
+ 333   2          ips114_set_region_simspi(x,y+i,x+7,y+i);
+ 334   2          temp = tft_ascii[dat-32][i];//减32因为是取模是从空格开始取得 空格在ascii中序号是32
+ 335   2          for(j=0; j<8; j++)
+ 336   2          {
+ 337   3            if(temp&0x01) 
+ 338   3                  {
+ 339   4                      ips114_writeDatai_16bit_simspi(IPS114_PENCOLOR);
+ 340   4                  }
+ 341   3            else      ips114_writeDatai_16bit_simspi(IPS114_BGCOLOR);
+ 342   3            temp>>=1;
+ 343   3          }
+ 344   2        }
+ 345   1      }
+C51 COMPILER V9.60.0.0   SEEKFREE_IPS114_SPI                                               12/08/2023 20:31:22 PAGE 7   
+
+ 346          
+ 347          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 348          //  @brief      液晶显示字符串
+ 349          //  @param      x               坐标x方向的起点  参数范围 0 -（IPS114_X_MAX-1）
+ 350          //  @param      y               坐标y方向的起点  参数范围 0 -（IPS114_Y_MAX/16-1）
+ 351          //  @param      dat             需要显示的字符串
+ 352          //  @return     void
+ 353          //  @since      v1.0
+ 354          //  Sample usage:               ips114_showstr(0,0,"seekfree");
+ 355          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 356          void ips114_showstr_simspi(uint16 x,uint16 y,const int8 dat[])
+ 357          {
+ 358   1        uint16 j;
+ 359   1        
+ 360   1        j = 0;
+ 361   1        while(dat[j] != '\0')
+ 362   1        {
+ 363   2          ips114_showchar_simspi(x+8*j,y*16,dat[j]);
+ 364   2          j++;
+ 365   2        }
+ 366   1      }
+ 367          
+ 368          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 369          //  @brief      液晶显示8位有符号
+ 370          //  @param      x               坐标x方向的起点  参数范围 0 -（IPS114_X_MAX-1）
+ 371          //  @param      y               坐标y方向的起点  参数范围 0 -（IPS114_Y_MAX/16-1）
+ 372          //  @param      dat             需要显示的变量，数据类型int8
+ 373          //  @return     void
+ 374          //  @since      v1.0
+ 375          //  Sample usage:               ips114_showint8(0,0,x);//x为int8类型
+ 376          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 377          void ips114_showint8_simspi(uint16 x,uint16 y,int8 dat)
+ 378          {
+ 379   1        uint8 a[3];
+ 380   1        uint8 i;
+ 381   1        if(dat<0)
+ 382   1        {
+ 383   2          ips114_showchar_simspi(x,y*16,'-');
+ 384   2          dat = -dat;
+ 385   2        }
+ 386   1        else  ips114_showchar_simspi(x,y*16,' ');
+ 387   1        
+ 388   1        a[0] = dat/100;
+ 389   1        a[1] = dat/10%10;
+ 390   1        a[2] = dat%10;
+ 391   1        i = 0;
+ 392   1        while(i<3)
+ 393   1        {
+ 394   2          ips114_showchar_simspi(x+(8*(i+1)),y*16,'0' + a[i]);
+ 395   2          i++;
+ 396   2        }
+ 397   1      }
+ 398          
+ 399          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 400          //  @brief      液晶显示8位无符号
+ 401          //  @param      x               坐标x方向的起点 参数范围 0 -（IPS114_X_MAX-1）
+ 402          //  @param      y               坐标y方向的起点 参数范围 0 -（IPS114_Y_MAX/16-1）
+C51 COMPILER V9.60.0.0   SEEKFREE_IPS114_SPI                                               12/08/2023 20:31:22 PAGE 8   
+
+ 403          //  @param      dat             需要显示的变量，数据类型uint8
+ 404          //  @return     void
+ 405          //  @since      v1.0
+ 406          //  Sample usage:               ips114_showuint8(0,0,x);//x为uint8类型
+ 407          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 408          void ips114_showuint8_simspi(uint16 x,uint16 y,uint8 dat)
+ 409          {
+ 410   1        uint8 a[3];
+ 411   1        uint8 i;
+ 412   1        
+ 413   1        a[0] = dat/100;
+ 414   1        a[1] = dat/10%10;
+ 415   1        a[2] = dat%10;
+ 416   1        i = 0;
+ 417   1        while(i<3)
+ 418   1        {
+ 419   2          ips114_showchar_simspi(x+(8*i),y*16,'0' + a[i]);
+ 420   2          i++;
+ 421   2        }
+ 422   1        
+ 423   1      }
+ 424          
+ 425          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 426          //  @brief      液晶显示16位有符号
+ 427          //  @param      x               坐标x方向的起点 参数范围 0 -（IPS114_X_MAX-1）
+ 428          //  @param      y               坐标y方向的起点 参数范围 0 -（IPS114_Y_MAX/16-1）
+ 429          //  @param      dat             需要显示的变量，数据类型int16
+ 430          //  @return     void
+ 431          //  @since      v1.0
+ 432          //  Sample usage:               ips114_showint16(0,0,x);//x为int16类型
+ 433          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 434          void ips114_showint16_simspi(uint16 x,uint16 y,int16 dat)
+ 435          {
+ 436   1        uint8 a[5];
+ 437   1        uint8 i;
+ 438   1        if(dat<0)
+ 439   1        {
+ 440   2          ips114_showchar_simspi(x,y*16,'-');
+ 441   2          dat = -dat;
+ 442   2        }
+ 443   1        else  ips114_showchar_simspi(x,y*16,' ');
+ 444   1      
+ 445   1        a[0] = dat/10000;
+ 446   1        a[1] = dat/1000%10;
+ 447   1        a[2] = dat/100%10;
+ 448   1        a[3] = dat/10%10;
+ 449   1        a[4] = dat%10;
+ 450   1        
+ 451   1        i = 0;
+ 452   1        while(i<5)
+ 453   1        {
+ 454   2          ips114_showchar_simspi(x+(8*(i+1)),y*16,'0' + a[i]);
+ 455   2          i++;
+ 456   2        }
+ 457   1      }
+ 458          
+ 459          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 460          //  @brief      液晶显示16位无符号
+C51 COMPILER V9.60.0.0   SEEKFREE_IPS114_SPI                                               12/08/2023 20:31:22 PAGE 9   
+
+ 461          //  @param      x               坐标x方向的起点 参数范围 0 -（IPS114_X_MAX-1）
+ 462          //  @param      y               坐标y方向的起点 参数范围 0 -（IPS114_Y_MAX/16-1）
+ 463          //  @param      dat             需要显示的变量，数据类型uint16
+ 464          //  @return     void
+ 465          //  @since      v1.0
+ 466          //  Sample usage:               ips114_showuint16(0,0,x);//x为uint16类型
+ 467          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 468          void ips114_showuint16_simspi(uint16 x,uint16 y,uint16 dat)
+ 469          {
+ 470   1        uint8 a[5];
+ 471   1        uint8 i;
+ 472   1      
+ 473   1        a[0] = dat/10000;
+ 474   1        a[1] = dat/1000%10;
+ 475   1        a[2] = dat/100%10;
+ 476   1        a[3] = dat/10%10;
+ 477   1        a[4] = dat%10;
+ 478   1        
+ 479   1        i = 0;
+ 480   1        while(i<5)
+ 481   1        {
+ 482   2          ips114_showchar_simspi(x+(8*i),y*16,'0' + a[i]);
+ 483   2          i++;
+ 484   2        }
+ 485   1      }
+ 486          
+ 487          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 488          //  @brief      液晶显示32位有符号(去除整数部分无效的0)
+ 489          //  @param      x               坐标x方向的起点 参数范围 0 -（IPS114_X_MAX-1）
+ 490          //  @param      y               坐标y方向的起点 参数范围 0 -（IPS114_Y_MAX/16-1）
+ 491          //  @param      dat             需要显示的变量，数据类型uint32
+ 492          //  @param      num             需要显示的位数 最高10位  不包含正负号
+ 493          //  @return     void
+ 494          //  @since      v1.0
+ 495          //  Sample usage:               ips114_showuint32(0,0,x,3);//x可以为int32 uint16 int16 uint8 int8类型
+ 496          //  Sample usage:               负数会显示一个 ‘-’号   正数显示一个空格
+ 497          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 498          void ips114_showint32_simspi(uint16 x,uint16 y,int32 dat,uint8 num)
+ 499          {
+ 500   1          int8    buff[34];
+ 501   1          uint8   length;
+ 502   1          
+ 503   1          if(10<num)      num = 10;
+ 504   1          
+ 505   1          num++;
+ 506   1          if(0>dat)   length = zf_sprintf( &buff[0],"%d",dat);//负数
+ 507   1          else
+ 508   1          {
+ 509   2              buff[0] = ' ';
+ 510   2              length = zf_sprintf( &buff[1],"%d",dat);
+ 511   2              length++;
+ 512   2          }
+ 513   1          while(length < num)
+ 514   1          {
+ 515   2              buff[length] = ' ';
+ 516   2              length++;
+ 517   2          }
+ 518   1          buff[num] = '\0';
+ 519   1      
+C51 COMPILER V9.60.0.0   SEEKFREE_IPS114_SPI                                               12/08/2023 20:31:22 PAGE 10  
+
+ 520   1          ips114_showstr_simspi(x, y, buff);  //显示数字
+ 521   1      }
+ 522          
+ 523          
+ 524          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 525          //  @brief      液晶显示浮点数(去除整数部分无效的0)
+ 526          //  @param      x               坐标x方向的起点 参数范围 0 -（IPS114_X_MAX-1）
+ 527          //  @param      y               坐标y方向的起点 参数范围 0 -（IPS114_Y_MAX/16-1）
+ 528          //  @param      dat             需要显示的变量，数据类型float或double
+ 529          //  @param      num             整数位显示长度   最高10位  
+ 530          //  @param      pointnum        小数位显示长度   最高6位
+ 531          //  @return     void
+ 532          //  @since      v1.0
+ 533          //  Sample usage:               ips114_showfloat(0,0,x,2,3);//显示浮点数   整数显示2位   小数显示三位
+ 534          //  @note                       特别注意当发现小数部分显示的值与你写入的值不一样的时候，
+ 535          //                              可能是由于浮点数精度丢失问题导致的，这并不是显示函数的问题，
+ 536          //                              有关问题的详情，请自行百度学习   浮点数精度丢失问题。
+ 537          //                              负数会显示一个 ‘-’号   正数显示一个空格
+ 538          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 539          void ips114_showfloat_simspi(uint16 x,uint16 y,double dat,uint8 num,uint8 pointnum)
+ 540          {
+ 541   1          uint8   length;
+ 542   1        int8    buff[34];
+ 543   1        int8    start,end,point;
+ 544   1      
+ 545   1        if(6<pointnum)  pointnum = 6;
+ 546   1          if(10<num)      num = 10;
+ 547   1              
+ 548   1          if(0>dat)   length = zf_sprintf( &buff[0],"%f",dat);//负数
+ 549   1          else
+ 550   1          {
+ 551   2              length = zf_sprintf( &buff[1],"%f",dat);
+ 552   2              length++;
+ 553   2          }
+ 554   1          point = length - 7;         //计算小数点位置
+ 555   1          start = point - num - 1;    //计算起始位
+ 556   1          end = point + pointnum + 1; //计算结束位
+ 557   1          while(0>start)//整数位不够  末尾应该填充空格
+ 558   1          {
+ 559   2              buff[end] = ' ';
+ 560   2              end++;
+ 561   2              start++;
+ 562   2          }
+ 563   1          
+ 564   1          if(0>dat)   buff[start] = '-';
+ 565   1          else        buff[start] = ' ';
+ 566   1          
+ 567   1          buff[end] = '\0';
+ 568   1      
+ 569   1          ips114_showstr_simspi(x, y, buff);  //显示数字
+ 570   1      }
+ 571          
+ 572          
+ 573          
+ 574          
+ 575          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 576          //  以下函数是使用硬件SPI通信，相比较软件IIC，速度比软件IIC快。
+ 577          //--------------------------------------------------------------------------------------------------------
+             ------------
+C51 COMPILER V9.60.0.0   SEEKFREE_IPS114_SPI                                               12/08/2023 20:31:22 PAGE 11  
+
+ 578          
+ 579          
+ 580          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 581          //  @brief      内部调用，用户无需关心
+ 582          //  @param      void        
+ 583          //  @return             
+ 584          //  @since      v1.0
+ 585          //  Sample usage:               
+ 586          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 587          void ips114_writeIndex(uint8 dat)     //写命令
+ 588          { 
+ 589   1        IPS114_CS(0);
+ 590   1          IPS114_DC(0);
+ 591   1      
+ 592   1        spi_mosi(dat);
+ 593   1        IPS114_CS(1);
+ 594   1      }
+ 595          
+ 596          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 597          //  @brief      内部调用，用户无需关心
+ 598          //  @param      void        
+ 599          //  @return             
+ 600          //  @since      v1.0
+ 601          //  Sample usage:               
+ 602          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 603          void ips114_writeData(uint8 dat)      //写数据
+ 604          {
+ 605   1        IPS114_CS(0);
+ 606   1          IPS114_DC(1);
+ 607   1      
+ 608   1        spi_mosi(dat);
+ 609   1        IPS114_CS(1);
+ 610   1      }
+ 611          
+ 612          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 613          //  @brief      内部调用，用户无需关心
+ 614          //  @param      void        
+ 615          //  @return             
+ 616          //  @since      v1.0
+ 617          //  Sample usage:               
+ 618          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 619          void ips114_writedata_16bit(uint16 dat) //向液晶屏写一个16位数据
+ 620          {
+ 621   1          uint8 dat1[2];
+ 622   1          dat1[0] = dat >> 8;
+ 623   1          dat1[1] = (uint8)dat;
+ 624   1        IPS114_CS(0);
+ 625   1          IPS114_DC(1);
+ 626   1        spi_mosi(dat1[0]);  //写入数据  高位在前  低位在后
+ 627   1        spi_mosi(dat1[1]);
+ 628   1        IPS114_CS(1);
+ 629   1      }
+ 630          
+ 631          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 632          //  @brief      1.14寸 IPS液晶初始化
+C51 COMPILER V9.60.0.0   SEEKFREE_IPS114_SPI                                               12/08/2023 20:31:22 PAGE 12  
+
+ 633          //  @return     void
+ 634          //  @since      v1.0
+ 635          //  Sample usage:               
+ 636          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 637          void ips114_init(void)
+ 638          {
+ 639   1          spi_init(IPS114_SPIN_PIN, IPS114_SCL_PIN, IPS114_SDA_PIN, IPS114_SDA_IN_PIN, 0, MASTER, SPI_SYSclk_DIV
+             -_4);
+ 640   1      
+ 641   1        IPS114_BL(1);
+ 642   1        IPS114_DC(0);
+ 643   1        IPS114_REST(0);
+ 644   1        
+ 645   1          pca_delay_ms(200);
+ 646   1          
+ 647   1          IPS114_REST(1);
+ 648   1          pca_delay_ms(100);
+ 649   1        
+ 650   1          ips114_writeIndex(0x36);
+ 651   1          
+ 652   1          if      (IPS114_DISPLAY_DIR==0)    ips114_writeData(0x00);
+ 653   1          else if (IPS114_DISPLAY_DIR==1)    ips114_writeData(0xC0);
+ 654   1          else if (IPS114_DISPLAY_DIR==2)    ips114_writeData(0x70);
+ 655   1          else                            ips114_writeData(0xA0);
+ 656   1          
+ 657   1          ips114_writeIndex(0x3A); 
+ 658   1          ips114_writeData(0x05);
+ 659   1      
+ 660   1          ips114_writeIndex(0xB2);
+ 661   1          ips114_writeData(0x0C);
+ 662   1          ips114_writeData(0x0C);
+ 663   1          ips114_writeData(0x00);
+ 664   1          ips114_writeData(0x33);
+ 665   1          ips114_writeData(0x33); 
+ 666   1      
+ 667   1          ips114_writeIndex(0xB7); 
+ 668   1          ips114_writeData(0x35);  
+ 669   1      
+ 670   1          ips114_writeIndex(0xBB);
+ 671   1          ips114_writeData(0x37);
+ 672   1      
+ 673   1          ips114_writeIndex(0xC0);
+ 674   1          ips114_writeData(0x2C);
+ 675   1      
+ 676   1          ips114_writeIndex(0xC2);
+ 677   1          ips114_writeData(0x01);
+ 678   1      
+ 679   1          ips114_writeIndex(0xC3);
+ 680   1          ips114_writeData(0x12);   
+ 681   1      
+ 682   1          ips114_writeIndex(0xC4);
+ 683   1          ips114_writeData(0x20);  
+ 684   1      
+ 685   1          ips114_writeIndex(0xC6); 
+ 686   1          ips114_writeData(0x0F);    
+ 687   1      
+ 688   1          ips114_writeIndex(0xD0); 
+ 689   1          ips114_writeData(0xA4);
+ 690   1          ips114_writeData(0xA1);
+ 691   1      
+ 692   1          ips114_writeIndex(0xE0);
+C51 COMPILER V9.60.0.0   SEEKFREE_IPS114_SPI                                               12/08/2023 20:31:22 PAGE 13  
+
+ 693   1          ips114_writeData(0xD0);
+ 694   1          ips114_writeData(0x04);
+ 695   1          ips114_writeData(0x0D);
+ 696   1          ips114_writeData(0x11);
+ 697   1          ips114_writeData(0x13);
+ 698   1          ips114_writeData(0x2B);
+ 699   1          ips114_writeData(0x3F);
+ 700   1          ips114_writeData(0x54);
+ 701   1          ips114_writeData(0x4C);
+ 702   1          ips114_writeData(0x18);
+ 703   1          ips114_writeData(0x0D);
+ 704   1          ips114_writeData(0x0B);
+ 705   1          ips114_writeData(0x1F);
+ 706   1          ips114_writeData(0x23);
+ 707   1      
+ 708   1          ips114_writeIndex(0xE1);
+ 709   1          ips114_writeData(0xD0);
+ 710   1          ips114_writeData(0x04);
+ 711   1          ips114_writeData(0x0C);
+ 712   1          ips114_writeData(0x11);
+ 713   1          ips114_writeData(0x13);
+ 714   1          ips114_writeData(0x2C);
+ 715   1          ips114_writeData(0x3F);
+ 716   1          ips114_writeData(0x44);
+ 717   1          ips114_writeData(0x51);
+ 718   1          ips114_writeData(0x2F);
+ 719   1          ips114_writeData(0x1F);
+ 720   1          ips114_writeData(0x1F);
+ 721   1          ips114_writeData(0x20);
+ 722   1          ips114_writeData(0x23);
+ 723   1      
+ 724   1          ips114_writeIndex(0x21); 
+ 725   1      
+ 726   1          ips114_writeIndex(0x11); 
+ 727   1          pca_delay_ms(120); 
+ 728   1      
+ 729   1          ips114_writeIndex(0x29);
+ 730   1          ips114_clear(IPS114_BGCOLOR);
+ 731   1      }
+ 732          
+ 733          
+ 734          
+ 735          void ips114_set_region(uint16 x1,uint16 y1,uint16 x2,uint16 y2)
+ 736          {
+ 737   1        #if(IPS114_DISPLAY_DIR==0)
+                {
+                  ips114_writeIndex(0x2a);//列地址设置
+                  ips114_writedata_16bit(x1+52);
+                  ips114_writedata_16bit(x2+52);
+                  ips114_writeIndex(0x2b);//行地址设置
+                  ips114_writedata_16bit(y1+40);
+                  ips114_writedata_16bit(y2+40);
+                  ips114_writeIndex(0x2c);//储存器写
+                }
+                #elif(IPS114_DISPLAY_DIR==1)
+                {
+                  ips114_writeIndex(0x2a);//列地址设置
+                  ips114_writedata_16bit(x1+53);
+                  ips114_writedata_16bit(x2+53);
+                  ips114_writeIndex(0x2b);//行地址设置
+                  ips114_writedata_16bit(y1+40);
+                  ips114_writedata_16bit(y2+40);
+C51 COMPILER V9.60.0.0   SEEKFREE_IPS114_SPI                                               12/08/2023 20:31:22 PAGE 14  
+
+                  ips114_writeIndex(0x2c);//储存器写
+                }
+                #elif(IPS114_DISPLAY_DIR==2)
+                {
+                  ips114_writeIndex(0x2a);//列地址设置
+                  ips114_writedata_16bit(x1+40);
+                  ips114_writedata_16bit(x2+40);
+                  ips114_writeIndex(0x2b);//行地址设置
+                  ips114_writedata_16bit(y1+53);
+                  ips114_writedata_16bit(y2+53);
+                  ips114_writeIndex(0x2c);//储存器写
+                }
+                #else
+ 768   1        {
+ 769   2          ips114_writeIndex(0x2a);//列地址设置
+ 770   2          ips114_writedata_16bit(x1+40);
+ 771   2          ips114_writedata_16bit(x2+40);
+ 772   2          ips114_writeIndex(0x2b);//行地址设置
+ 773   2          ips114_writedata_16bit(y1+52);
+ 774   2          ips114_writedata_16bit(y2+52);
+ 775   2          ips114_writeIndex(0x2c);//储存器写
+ 776   2        }
+ 777   1        #endif
+ 778   1      }
+ 779          
+ 780          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 781          //  @brief      液晶清屏函数
+ 782          //  @param      color         颜色设置
+ 783          //  @return     void
+ 784          //  @since      v1.0
+ 785          //  Sample usage:               ips114_clear(YELLOW);// 全屏设置为黄色
+ 786          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 787          void ips114_clear(uint16 color)
+ 788          {
+ 789   1          uint16 i,j;
+ 790   1        ips114_set_region(0,0,IPS114_X_MAX-1,IPS114_Y_MAX-1);
+ 791   1          for(i=0;i<IPS114_X_MAX;i++)
+ 792   1          {
+ 793   2              for (j=0;j<IPS114_Y_MAX;j++)
+ 794   2            {
+ 795   3                ips114_writedata_16bit(color);         
+ 796   3            }
+ 797   2          }
+ 798   1      }
+ 799          
+ 800          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 801          //  @brief      液晶画点
+ 802          //  @param      x               坐标x方向的起点
+ 803          //  @param      y               坐标y方向的起点
+ 804          //  @param      dat             需要显示的颜色
+ 805          //  @return     void
+ 806          //  @since      v1.0
+ 807          //  Sample usage:               ips114_drawpoint(0,0,RED);  //坐标0,0画一个红色的点
+ 808          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 809          void ips114_drawpoint(uint16 x,uint16 y,uint16 color)
+ 810          {
+ 811   1          ips114_set_region(x,y,x,y);
+ 812   1          ips114_writedata_16bit(color);
+C51 COMPILER V9.60.0.0   SEEKFREE_IPS114_SPI                                               12/08/2023 20:31:22 PAGE 15  
+
+ 813   1      }
+ 814          
+ 815          
+ 816          
+ 817          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 818          //  @brief      液晶显示字符
+ 819          //  @param      x               坐标x方向的起点 参数范围 0 -（IPS114_X_MAX-1）
+ 820          //  @param      y               坐标y方向的起点 参数范围 0 -（IPS114_Y_MAX/16-1）
+ 821          //  @param      dat             需要显示的字符
+ 822          //  @return     void
+ 823          //  @since      v1.0
+ 824          //  Sample usage:               ips114_showchar(0,0,'x');//坐标0,0写一个字符x
+ 825          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 826          void ips114_showchar(uint16 x,uint16 y,const int8 dat)
+ 827          {
+ 828   1        uint8 i,j;
+ 829   1        uint8 temp;
+ 830   1          
+ 831   1        for(i=0; i<16; i++)
+ 832   1        {
+ 833   2          ips114_set_region(x,y+i,x+7,y+i);
+ 834   2          temp = tft_ascii[dat-32][i];//减32因为是取模是从空格开始取得 空格在ascii中序号是32
+ 835   2          for(j=0; j<8; j++)
+ 836   2          {
+ 837   3            if(temp&0x01) 
+ 838   3                  {
+ 839   4                      ips114_writedata_16bit(IPS114_PENCOLOR);
+ 840   4                  }
+ 841   3            else      ips114_writedata_16bit(IPS114_BGCOLOR);
+ 842   3            temp>>=1;
+ 843   3          }
+ 844   2        }
+ 845   1      }
+ 846          
+ 847          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 848          //  @brief      液晶显示字符串
+ 849          //  @param      x               坐标x方向的起点  参数范围 0 -（IPS114_X_MAX-1）
+ 850          //  @param      y               坐标y方向的起点  参数范围 0 -（IPS114_Y_MAX/16-1）
+ 851          //  @param      dat             需要显示的字符串
+ 852          //  @return     void
+ 853          //  @since      v1.0
+ 854          //  Sample usage:               ips114_showstr(0,0,"seekfree");
+ 855          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 856          void ips114_showstr(uint16 x,uint16 y,const int8 dat[])
+ 857          {
+ 858   1        uint16 j;
+ 859   1        
+ 860   1        j = 0;
+ 861   1        while(dat[j] != '\0')
+ 862   1        {
+ 863   2          ips114_showchar(x+8*j,y*16,dat[j]);
+ 864   2          j++;
+ 865   2        }
+ 866   1      }
+ 867          
+ 868          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 869          //  @brief      液晶显示8位有符号
+C51 COMPILER V9.60.0.0   SEEKFREE_IPS114_SPI                                               12/08/2023 20:31:22 PAGE 16  
+
+ 870          //  @param      x               坐标x方向的起点  参数范围 0 -（IPS114_X_MAX-1）
+ 871          //  @param      y               坐标y方向的起点  参数范围 0 -（IPS114_Y_MAX/16-1）
+ 872          //  @param      dat             需要显示的变量，数据类型int8
+ 873          //  @return     void
+ 874          //  @since      v1.0
+ 875          //  Sample usage:               ips114_showint8(0,0,x);//x为int8类型
+ 876          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 877          void ips114_showint8(uint16 x,uint16 y,int8 dat)
+ 878          {
+ 879   1        uint8 a[3];
+ 880   1        uint8 i;
+ 881   1        if(dat<0)
+ 882   1        {
+ 883   2          ips114_showchar(x,y*16,'-');
+ 884   2          dat = -dat;
+ 885   2        }
+ 886   1        else  ips114_showchar(x,y*16,' ');
+ 887   1        
+ 888   1        a[0] = dat/100;
+ 889   1        a[1] = dat/10%10;
+ 890   1        a[2] = dat%10;
+ 891   1        i = 0;
+ 892   1        while(i<3)
+ 893   1        {
+ 894   2          ips114_showchar(x+(8*(i+1)),y*16,'0' + a[i]);
+ 895   2          i++;
+ 896   2        }
+ 897   1      }
+ 898          
+ 899          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 900          //  @brief      液晶显示8位无符号
+ 901          //  @param      x               坐标x方向的起点 参数范围 0 -（IPS114_X_MAX-1）
+ 902          //  @param      y               坐标y方向的起点 参数范围 0 -（IPS114_Y_MAX/16-1）
+ 903          //  @param      dat             需要显示的变量，数据类型uint8
+ 904          //  @return     void
+ 905          //  @since      v1.0
+ 906          //  Sample usage:               ips114_showuint8(0,0,x);//x为uint8类型
+ 907          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 908          void ips114_showuint8(uint16 x,uint16 y,uint8 dat)
+ 909          {
+ 910   1        uint8 a[3];
+ 911   1        uint8 i;
+ 912   1        
+ 913   1        a[0] = dat/100;
+ 914   1        a[1] = dat/10%10;
+ 915   1        a[2] = dat%10;
+ 916   1        i = 0;
+ 917   1        while(i<3)
+ 918   1        {
+ 919   2          ips114_showchar(x+(8*i),y*16,'0' + a[i]);
+ 920   2          i++;
+ 921   2        }
+ 922   1        
+ 923   1      }
+ 924          
+ 925          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 926          //  @brief      液晶显示16位有符号
+ 927          //  @param      x               坐标x方向的起点 参数范围 0 -（IPS114_X_MAX-1）
+C51 COMPILER V9.60.0.0   SEEKFREE_IPS114_SPI                                               12/08/2023 20:31:22 PAGE 17  
+
+ 928          //  @param      y               坐标y方向的起点 参数范围 0 -（IPS114_Y_MAX/16-1）
+ 929          //  @param      dat             需要显示的变量，数据类型int16
+ 930          //  @return     void
+ 931          //  @since      v1.0
+ 932          //  Sample usage:               ips114_showint16(0,0,x);//x为int16类型
+ 933          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 934          void ips114_showint16(uint16 x,uint16 y,int16 dat)
+ 935          {
+ 936   1        uint8 a[5];
+ 937   1        uint8 i;
+ 938   1        if(dat<0)
+ 939   1        {
+ 940   2          ips114_showchar(x,y*16,'-');
+ 941   2          dat = -dat;
+ 942   2        }
+ 943   1        else  ips114_showchar(x,y*16,' ');
+ 944   1      
+ 945   1        a[0] = dat/10000;
+ 946   1        a[1] = dat/1000%10;
+ 947   1        a[2] = dat/100%10;
+ 948   1        a[3] = dat/10%10;
+ 949   1        a[4] = dat%10;
+ 950   1        
+ 951   1        i = 0;
+ 952   1        while(i<5)
+ 953   1        {
+ 954   2          ips114_showchar(x+(8*(i+1)),y*16,'0' + a[i]);
+ 955   2          i++;
+ 956   2        }
+ 957   1      }
+ 958          
+ 959          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 960          //  @brief      液晶显示16位无符号
+ 961          //  @param      x               坐标x方向的起点 参数范围 0 -（IPS114_X_MAX-1）
+ 962          //  @param      y               坐标y方向的起点 参数范围 0 -（IPS114_Y_MAX/16-1）
+ 963          //  @param      dat             需要显示的变量，数据类型uint16
+ 964          //  @return     void
+ 965          //  @since      v1.0
+ 966          //  Sample usage:               ips114_showuint16(0,0,x);//x为uint16类型
+ 967          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 968          void ips114_showuint16(uint16 x,uint16 y,uint16 dat)
+ 969          {
+ 970   1        uint8 a[5];
+ 971   1        uint8 i;
+ 972   1      
+ 973   1        a[0] = dat/10000;
+ 974   1        a[1] = dat/1000%10;
+ 975   1        a[2] = dat/100%10;
+ 976   1        a[3] = dat/10%10;
+ 977   1        a[4] = dat%10;
+ 978   1        
+ 979   1        i = 0;
+ 980   1        while(i<5)
+ 981   1        {
+ 982   2          ips114_showchar(x+(8*i),y*16,'0' + a[i]);
+ 983   2          i++;
+ 984   2        }
+ 985   1      }
+ 986          
+C51 COMPILER V9.60.0.0   SEEKFREE_IPS114_SPI                                               12/08/2023 20:31:22 PAGE 18  
+
+ 987          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 988          //  @brief      液晶显示32位有符号(去除整数部分无效的0)
+ 989          //  @param      x               坐标x方向的起点 参数范围 0 -（IPS114_X_MAX-1）
+ 990          //  @param      y               坐标y方向的起点 参数范围 0 -（IPS114_Y_MAX/16-1）
+ 991          //  @param      dat             需要显示的变量，数据类型uint32
+ 992          //  @param      num             需要显示的位数 最高10位  不包含正负号
+ 993          //  @return     void
+ 994          //  @since      v1.0
+ 995          //  Sample usage:               ips114_showuint32(0,0,x,3);//x可以为int32 uint16 int16 uint8 int8类型
+ 996          //  Sample usage:               负数会显示一个 ‘-’号   正数显示一个空格
+ 997          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 998          void ips114_showint32(uint16 x,uint16 y,int32 dat,uint8 num)
+ 999          {
+1000   1          int8    buff[34];
+1001   1          uint8   length;
+1002   1          
+1003   1          if(10<num)      num = 10;
+1004   1          
+1005   1          num++;
+1006   1          if(0>dat)   length = zf_sprintf( &buff[0],"%d",dat);//负数
+1007   1          else
+1008   1          {
+1009   2              buff[0] = ' ';
+1010   2              length = zf_sprintf( &buff[1],"%d",dat);
+1011   2              length++;
+1012   2          }
+1013   1          while(length < num)
+1014   1          {
+1015   2              buff[length] = ' ';
+1016   2              length++;
+1017   2          }
+1018   1          buff[num] = '\0';
+1019   1      
+1020   1          ips114_showstr(x, y, buff); //显示数字
+1021   1      }
+1022          
+1023          
+1024          //--------------------------------------------------------------------------------------------------------
+             ------------
+1025          //  @brief      液晶显示浮点数(去除整数部分无效的0)
+1026          //  @param      x               坐标x方向的起点 参数范围 0 -（IPS114_X_MAX-1）
+1027          //  @param      y               坐标y方向的起点 参数范围 0 -（IPS114_Y_MAX/16-1）
+1028          //  @param      dat             需要显示的变量，数据类型float或double
+1029          //  @param      num             整数位显示长度   最高10位  
+1030          //  @param      pointnum        小数位显示长度   最高6位
+1031          //  @return     void
+1032          //  @since      v1.0
+1033          //  Sample usage:               ips114_showfloat(0,0,x,2,3);//显示浮点数   整数显示2位   小数显示三位
+1034          //  @note                       特别注意当发现小数部分显示的值与你写入的值不一样的时候，
+1035          //                              可能是由于浮点数精度丢失问题导致的，这并不是显示函数的问题，
+1036          //                              有关问题的详情，请自行百度学习   浮点数精度丢失问题。
+1037          //                              负数会显示一个 ‘-’号   正数显示一个空格
+1038          //--------------------------------------------------------------------------------------------------------
+             ------------
+1039          void ips114_showfloat(uint16 x,uint16 y,double dat,uint8 num,uint8 pointnum)
+1040          {
+1041   1          uint8   length;
+1042   1        int8    buff[34];
+1043   1        int8    start,end,point;
+1044   1      
+C51 COMPILER V9.60.0.0   SEEKFREE_IPS114_SPI                                               12/08/2023 20:31:22 PAGE 19  
+
+1045   1        if(6<pointnum)  pointnum = 6;
+1046   1          if(10<num)      num = 10;
+1047   1              
+1048   1          if(0>dat)   length = zf_sprintf( &buff[0],"%f",dat);//负数
+1049   1          else
+1050   1          {
+1051   2              length = zf_sprintf( &buff[1],"%f",dat);
+1052   2              length++;
+1053   2          }
+1054   1          point = length - 7;         //计算小数点位置
+1055   1          start = point - num - 1;    //计算起始位
+1056   1          end = point + pointnum + 1; //计算结束位
+1057   1          while(0>start)//整数位不够  末尾应该填充空格
+1058   1          {
+1059   2              buff[end] = ' ';
+1060   2              end++;
+1061   2              start++;
+1062   2          }
+1063   1          
+1064   1          if(0>dat)   buff[start] = '-';
+1065   1          else        buff[start] = ' ';
+1066   1          
+1067   1          buff[end] = '\0';
+1068   1      
+1069   1          ips114_showstr(x, y, buff); //显示数字
+1070   1      }
+1071          
+1072          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   4944    ----
+   CONSTANT SIZE    =      6    ----
+   XDATA SIZE       =   ----     332
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

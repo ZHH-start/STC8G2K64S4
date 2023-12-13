@@ -1,0 +1,212 @@
+C51 COMPILER V9.60.0.0   ATK_MW8266D_UART                                                  12/08/2023 20:31:23 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE ATK_MW8266D_UART
+OBJECT MODULE PLACED IN .\Out_File\atk_mw8266d_uart.obj
+COMPILER INVOKED BY: C:\Keil_v5_C51\C51\BIN\C51.EXE ..\Libraries\seekfree_peripheral\atk_mw8266d_uart.c LARGE OMF2 OPTIM
+                    -IZE(8,SPEED) BROWSE INCDIR(..\Libraries\libraries;..\Libraries\seekfree_libraries;..\Libraries\seekfree_peripheral;..\US
+                    -ER;..\CODE) DEBUG PRINT(.\Out_File\atk_mw8266d_uart.lst) TABS(2) OBJECT(.\Out_File\atk_mw8266d_uart.obj)
+
+line level    source
+
+   1          #include "atk_mw8266d_uart.h"
+   2          #include "zf_uart.h"
+   3          #include "zf_tim.h"
+   4          #include <stdarg.h>
+   5          #include <stdio.h>
+   6          #include <string.h>
+   7          #include "common.h"
+   8          
+   9          // static UART_HandleTypeDef g_uart_handle; /* ATK-MW8266D UART */
+  10          static struct
+  11          {
+  12              uint8 buf[ATK_MW8266D_UART_RX_BUF_SIZE]; /* 帧接收缓冲 */
+  13              struct
+  14              {
+  15                  uint16 len : 15;                                  /* 帧接收长度，sta[14:0] */
+  16                  uint16 finsh : 1;                                 /* 帧接收完成标志，sta[15] */
+  17              } sta;                                                /* 帧状态信息 */
+  18          } g_uart_rx_frame = {0};                                  /* ATK-MW8266D UART接收帧缓冲信息结构体 */
+  19          static uint8 g_uart_tx_buf[ATK_MW8266D_UART_TX_BUF_SIZE]; /* ATK-MW8266D UART发送缓冲 */
+  20          
+  21          /**
+  22           * @brief       ATK-MW8266D UART printf
+  23           * @param       fmt: 待打印的数据
+  24           * @retval      无
+  25           */
+  26          void atk_mw8266d_uart_printf(char *fmt, ...)
+  27          {
+  28   1          va_list ap;
+  29   1          uint16 len;
+  30   1      
+  31   1          va_start(ap, fmt);
+  32   1          vsprintf((char *)g_uart_tx_buf, fmt, ap);
+  33   1          va_end(ap);
+  34   1      
+  35   1          len = strlen((const char *)g_uart_tx_buf);
+  36   1          // HAL_UART_Transmit(&g_uart_handle, g_uart_tx_buf, len, HAL_MAX_DELAY);
+  37   1          uart_putstr(UART_3, g_uart_tx_buf, len);
+  38   1      }
+  39          
+  40          /**
+  41           * @brief       ATK-MW8266D UART重新开始接收数据
+  42           * @param       无
+  43           * @retval      无
+  44           */
+  45          void atk_mw8266d_uart_rx_restart(void)
+  46          {
+  47   1          g_uart_rx_frame.sta.len   = 0;
+  48   1          g_uart_rx_frame.sta.finsh = 0;
+  49   1      }
+  50          
+  51          /**
+  52           * @brief       获取ATK-MW8266D UART接收到的一帧数据
+  53           * @param       无
+C51 COMPILER V9.60.0.0   ATK_MW8266D_UART                                                  12/08/2023 20:31:23 PAGE 2   
+
+  54           * @retval      NULL: 未接收到一帧数据
+  55           *              其他: 接收到的一帧数据
+  56           */
+  57          uint8 *atk_mw8266d_uart_rx_get_frame(void)
+  58          {
+  59   1          if (g_uart_rx_frame.sta.finsh == 1) {
+  60   2              g_uart_rx_frame.buf[g_uart_rx_frame.sta.len] = '\0';
+  61   2              return g_uart_rx_frame.buf;
+  62   2          } else {
+  63   2              return NULL;
+  64   2          }
+  65   1      }
+  66          
+  67          /**
+  68           * @brief       获取ATK-MW8266D UART接收到的一帧数据的长度
+  69           * @param       无
+  70           * @retval      0   : 未接收到一帧数据
+  71           *              其他: 接收到的一帧数据的长度
+  72           */
+  73          uint16 atk_mw8266d_uart_rx_get_frame_len(void)
+  74          {
+  75   1          if (g_uart_rx_frame.sta.finsh == 1) {
+  76   2              return g_uart_rx_frame.sta.len;
+  77   2          } else {
+  78   2              return 0;
+  79   2          }
+  80   1      }
+  81          
+  82          /**
+  83           * @brief       ATK-MW8266D UART初始化
+  84           * @param       baudrate: UART通讯波特率
+  85           * @retval      无
+  86           */
+  87          void atk_mw8266d_uart_init(uint32 baudrate)
+  88          {
+  89   1          uart_init(UART_3, UART3_RX_P50, UART3_TX_P51, baudrate, TIM_0);
+  90   1      }
+  91          // void atk_mw8266d_uart_init(uint32 baudrate)
+  92          // {
+  93          //     g_uart_handle.Instance          = ATK_MW8266D_UART_INTERFACE; /* ATK-MW8266D UART */
+  94          //     g_uart_handle.Init.BaudRate     = baudrate;                   /* 波特率 */
+  95          //     g_uart_handle.Init.WordLength   = UART_WORDLENGTH_8B;         /* 数据位 */
+  96          //     g_uart_handle.Init.StopBits     = UART_STOPBITS_1;            /* 停止位 */
+  97          //     g_uart_handle.Init.Parity       = UART_PARITY_NONE;           /* 校验位 */
+  98          //     g_uart_handle.Init.Mode         = UART_MODE_TX_RX;            /* 收发模式 */
+  99          //     g_uart_handle.Init.HwFlowCtl    = UART_HWCONTROL_NONE;        /* 无硬件流控 */
+ 100          //     g_uart_handle.Init.OverSampling = UART_OVERSAMPLING_16;       /* 过采样 */
+ 101          //     HAL_UART_Init(&g_uart_handle);                                /* 使能ATK-MW8266D UART
+ 102          //                                                                    * HAL_UART_Init()会调用函数HAL_UART_
+             -MspInit()
+ 103          //                                                                    * 该函数定义在文件usart.c中*/
+ 104          // }
+ 105          
+ 106          /**
+ 107           * @brief       ATK-MW8266D UART3中断回调函数
+ 108           * @param       无
+ 109           * @retval      无
+ 110           */
+ 111          //void Uart3Isr() interrupt 17
+ 112          //{
+ 113          //    if (S3CON & 0x02) {
+ 114          //        S3CON &= ~0x02;
+C51 COMPILER V9.60.0.0   ATK_MW8266D_UART                                                  12/08/2023 20:31:23 PAGE 3   
+
+ 115          //        busy[3] = 0;
+ 116          //    }
+ 117          //    if (S3CON & 0x01) {
+ 118          //        S3CON &= ~0x01;
+ 119          //        // S3BUF;
+ 120          //    }
+ 121          //}
+ 122          //{
+ 123          //    uint8 res;
+ 124          //    static uint8 dwon_count;
+ 125          //    if (TI) {
+ 126          //        TI      = 0;
+ 127          //        busy[1] = 0;
+ 128          //    }
+ 129          //    if (RI) {
+ 130          //        RI  = 0;
+ 131          //        res = SBUF;
+ 132          //        // 程序自动下载
+ 133          //        if (res == 0x7F || res == 0x80) {
+ 134          //            if (dwon_count++ > 20)
+ 135          //                IAP_CONTR = 0x60;
+ 136          //        } else {
+ 137          //            dwon_count = 0;
+ 138          //        }
+ 139          //    }
+ 140          //}
+ 141          // void ATK_MW8266D_UART_IRQHandler(void)
+ 142          // {
+ 143          //     uint8 tmp;
+ 144          
+ 145          //     if (__HAL_UART_GET_FLAG(&g_uart_handle, UART_FLAG_ORE) != RESET) /* UART接收过载错误中断 */
+ 146          //     {
+ 147          //         __HAL_UART_CLEAR_OREFLAG(&g_uart_handle); /* 清除接收过载错误中断标志 */
+ 148          //         (void)g_uart_handle.Instance->SR;         /* 先读SR寄存器，再读DR寄存器 */
+ 149          //         (void)g_uart_handle.Instance->DR;
+ 150          //     }
+ 151          
+ 152          //     if (__HAL_UART_GET_FLAG(&g_uart_handle, UART_FLAG_RXNE) != RESET) /* UART接收中断 */
+ 153          //     {
+ 154          //         HAL_UART_Receive(&g_uart_handle, &tmp, 1, HAL_MAX_DELAY); /* UART接收数据 */
+ 155          
+ 156          //         if (g_uart_rx_frame.sta.len < (ATK_MW8266D_UART_RX_BUF_SIZE - 1)) /* 判断UART接收缓冲是否溢出
+ 157          //                                                                            * 留出一位给结束符'\0'
+ 158          //                                                                            */
+ 159          //         {
+ 160          //             g_uart_rx_frame.buf[g_uart_rx_frame.sta.len] = tmp; /* 将接收到的数据写入缓冲 */
+ 161          //             g_uart_rx_frame.sta.len++;                          /* 更新接收到的数据长度 */
+ 162          //         } else                                                  /* UART接收缓冲溢出 */
+ 163          //         {
+ 164          //             g_uart_rx_frame.sta.len                      = 0;   /* 覆盖之前收到的数据 */
+ 165          //             g_uart_rx_frame.buf[g_uart_rx_frame.sta.len] = tmp; /* 将接收到的数据写入缓冲 */
+ 166          //             g_uart_rx_frame.sta.len++;                          /* 更新接收到的数据长度 */
+ 167          //         }
+ 168          //     }
+ 169          
+ 170          //     if (__HAL_UART_GET_FLAG(&g_uart_handle, UART_FLAG_IDLE) != RESET) /* UART总线空闲中断 */
+ 171          //     {
+ 172          //         g_uart_rx_frame.sta.finsh = 1; /* 标记帧接收完成 */
+ 173          
+ 174          //         __HAL_UART_CLEAR_IDLEFLAG(&g_uart_handle); /* 清除UART总线空闲中断 */
+ 175          //     }
+ 176          // }
+C51 COMPILER V9.60.0.0   ATK_MW8266D_UART                                                  12/08/2023 20:31:23 PAGE 4   
+
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    226    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =    194      50
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

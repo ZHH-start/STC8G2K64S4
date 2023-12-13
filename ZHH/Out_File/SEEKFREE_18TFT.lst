@@ -1,0 +1,1279 @@
+C51 COMPILER V9.60.0.0   SEEKFREE_18TFT                                                    12/08/2023 20:31:21 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE SEEKFREE_18TFT
+OBJECT MODULE PLACED IN .\Out_File\SEEKFREE_18TFT.obj
+COMPILER INVOKED BY: C:\Keil_v5_C51\C51\BIN\C51.EXE ..\Libraries\seekfree_peripheral\SEEKFREE_18TFT.c LARGE OMF2 OPTIMIZ
+                    -E(8,SPEED) BROWSE INCDIR(..\Libraries\libraries;..\Libraries\seekfree_libraries;..\Libraries\seekfree_peripheral;..\USER
+                    -;..\CODE) DEBUG PRINT(.\Out_File\SEEKFREE_18TFT.lst) TABS(2) OBJECT(.\Out_File\SEEKFREE_18TFT.obj)
+
+line level    source
+
+   1          /*********************************************************************************************************
+             -************
+   2           * COPYRIGHT NOTICE
+   3           * Copyright (c) 2018,逐飞科技
+   4           * All rights reserved.
+   5           * 技术讨论QQ群：一群：179029047(已满)  二群：244861897
+   6           *
+   7           * 以下所有内容版权均属逐飞科技所有，未经允许不得用于商业用途，
+   8           * 欢迎各位使用并传播本程序，修改内容时必须保留逐飞科技的版权声明。
+   9           *
+  10           * @file          TFT
+  11           * @company       成都逐飞科技有限公司
+  12           * @author        逐飞科技(QQ3184284598)
+  13           * @version       查看doc内version文件 版本说明
+  14           * @Software    IAR 8.3 or MDK 5.26
+  15           * @Taobao      https://seekfree.taobao.com/
+  16           * @date          2018-05-24
+  17           * @note    
+  18                    接线定义：
+  19                    ------------------------------------ 
+  20                    模块管脚            单片机管脚
+  21                    SCL                 查看TFT_SCL宏定义的引脚     硬件SPI引脚不可随意切换
+  22                    SDA                 查看TFT_SDA宏定义的引脚     硬件SPI引脚不可随意切换
+  23                    RES                 查看REST_PIN宏定义的引脚    
+  24                    DC                  查看DC_PIN宏定义的引脚  
+  25                    CS                  查看TFT_CS宏定义的引脚      硬件SPI引脚不可随意切换
+  26                    
+  27                    电源引脚
+  28                    BL  3.3V电源（背光控制引脚，也可以接PWM来控制亮度）
+  29                    VCC 3.3V电源
+  30                    GND 电源地
+  31                    最大分辨率128*160
+  32                    ------------------------------------ 
+  33          
+  34           *********************************************************************************************************
+             -***********/
+  35          
+  36          
+  37          
+  38          
+  39          
+  40          
+  41          
+  42          #include "zf_spi.h"
+  43          #include "zf_pca_delay.h"
+  44          #include "SEEKFREE_FONT.h"
+  45          #include "SEEKFREE_PRINTF.h"
+  46          #include "SEEKFREE_18TFT.h"
+  47          
+  48          
+  49          //--------------------------------------------------------------------------------------------------------
+             ------------
+  50          //  以下函数是使用软件SPI通信，相比较硬件SPI，软件SPI引脚更加灵活，可以使用任意普通IO
+C51 COMPILER V9.60.0.0   SEEKFREE_18TFT                                                    12/08/2023 20:31:21 PAGE 2   
+
+  51          //--------------------------------------------------------------------------------------------------------
+             ------------
+  52          
+  53          
+  54          
+  55          //--------------------------------------------------------------------------------------------------------
+             ------------
+  56          //  @brief      内部调用，用户无需关心
+  57          //  @param      void        
+  58          //  @return             
+  59          //  @since      v1.0
+  60          //  Sample usage:               
+  61          //--------------------------------------------------------------------------------------------------------
+             ------------
+  62          void lcd_writeIndex_simspi(uint8 dat)     //写命令
+  63          { 
+  64   1        uint8 i=8;
+  65   1        
+  66   1          TFT_CS_SIMSPI(0);
+  67   1        TFT_DC_SIMSPI(0);
+  68   1        TFT_SCL_SIMSPI(0);
+  69   1        
+  70   1        while(i--)
+  71   1        {
+  72   2          if(dat&0x80){TFT_SDA_SIMSPI(1);}
+  73   2          else{TFT_SDA_SIMSPI(0);}
+  74   2          TFT_SCL_SIMSPI(1);
+  75   2          
+  76   2          TFT_SCL_SIMSPI(0);
+  77   2          dat<<=1;
+  78   2        } 
+  79   1          TFT_CS_SIMSPI(1);
+  80   1      }
+  81          
+  82          //--------------------------------------------------------------------------------------------------------
+             ------------
+  83          //  @brief      内部调用，用户无需关心
+  84          //  @param      void        
+  85          //  @return             
+  86          //  @since      v1.0
+  87          //  Sample usage:               
+  88          //--------------------------------------------------------------------------------------------------------
+             ------------
+  89          void lcd_writeData_simspi(uint8 dat)      //写数据
+  90          {
+  91   1          uint8 i=8;
+  92   1        
+  93   1          TFT_CS_SIMSPI(0);
+  94   1        TFT_DC_SIMSPI(1);
+  95   1        TFT_SCL_SIMSPI(0);
+  96   1        while(i--)
+  97   1        {
+  98   2            if(dat&0x80){TFT_SDA_SIMSPI(1);}
+  99   2            else{TFT_SDA_SIMSPI(0);}
+ 100   2            TFT_SCL_SIMSPI(1);
+ 101   2          
+ 102   2            TFT_SCL_SIMSPI(0);
+ 103   2            dat<<=1;
+ 104   2        }
+ 105   1          TFT_CS_SIMSPI(1);
+ 106   1      }
+ 107          
+C51 COMPILER V9.60.0.0   SEEKFREE_18TFT                                                    12/08/2023 20:31:21 PAGE 3   
+
+ 108          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 109          //  @brief      内部调用，用户无需关心
+ 110          //  @param      void        
+ 111          //  @return             
+ 112          //  @since      v1.0
+ 113          //  Sample usage:               
+ 114          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 115          void lcd_writeData_16bit_simspi(uint16 dat) //向液晶屏写一个16位数据
+ 116          {
+ 117   1        uint8 i=16;
+ 118   1        
+ 119   1          TFT_CS_SIMSPI(0);
+ 120   1          TFT_DC_SIMSPI(1);
+ 121   1          TFT_SCL_SIMSPI(0);
+ 122   1        
+ 123   1        while(i--)
+ 124   1        {
+ 125   2            if(dat&0x8000){TFT_SDA_SIMSPI(1);}
+ 126   2            else{TFT_SDA_SIMSPI(0);}
+ 127   2            TFT_SCL_SIMSPI(1);
+ 128   2          
+ 129   2            TFT_SCL_SIMSPI(0);
+ 130   2            dat<<=1;
+ 131   2        }
+ 132   1        
+ 133   1          TFT_CS_SIMSPI(1);
+ 134   1      
+ 135   1      }
+ 136          
+ 137          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 138          //  @brief      液晶坐标设置
+ 139          //  @param      x_start       坐标x方向的起点
+ 140          //  @param      y_start       坐标y方向的起点
+ 141          //  @param      x_end         坐标x方向的终点
+ 142          //  @param      y_end         坐标y方向的终点
+ 143          //  @return     void
+ 144          //  @since      v1.0
+ 145          //  Sample usage:               lcd_set_region(0,0,10,10);// x、y的起点都是0，终点都是10
+ 146          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 147          void lcd_set_region_simspi(unsigned int x_start,unsigned int y_start,unsigned int x_end,unsigned int y_end
+             -)
+ 148          { 
+ 149   1      
+ 150   1          
+ 151   1      #if (0 == TFT_DISPLAY_DIR || 1 == TFT_DISPLAY_DIR)
+ 152   1          lcd_writeIndex_simspi(0x2a);
+ 153   1        lcd_writeData_simspi(0x00);
+ 154   1        lcd_writeData_simspi(x_start+2);
+ 155   1        lcd_writeData_simspi(0x00);
+ 156   1        lcd_writeData_simspi(x_end+2);
+ 157   1      
+ 158   1        lcd_writeIndex_simspi(0x2b);
+ 159   1        lcd_writeData_simspi(0x00);
+ 160   1        lcd_writeData_simspi(y_start+1);
+ 161   1        lcd_writeData_simspi(0x00);
+ 162   1        lcd_writeData_simspi(y_end+1);  
+ 163   1      
+ 164   1      #elif(2 == TFT_DISPLAY_DIR || 3 == TFT_DISPLAY_DIR)
+C51 COMPILER V9.60.0.0   SEEKFREE_18TFT                                                    12/08/2023 20:31:21 PAGE 4   
+
+                  lcd_writeIndex_simspi(0x2a);
+                lcd_writeData_simspi(0x00);
+                lcd_writeData_simspi(x_start+1);
+                lcd_writeData_simspi(0x0);
+                lcd_writeData_simspi(x_end+1);
+              
+                lcd_writeIndex_simspi(0x2b);
+                lcd_writeData_simspi(0x00);
+                lcd_writeData_simspi(y_start+2);
+                lcd_writeData_simspi(0x00);
+                lcd_writeData_simspi(y_end+2);  
+              
+              #endif
+ 178   1          
+ 179   1          lcd_writeIndex_simspi(0x2c);
+ 180   1      }
+ 181          
+ 182          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 183          //  @brief      液晶清屏函数
+ 184          //  @param      color         颜色设置
+ 185          //  @return     void
+ 186          //  @since      v1.0
+ 187          //  Sample usage:               lcd_clear(YELLOW);// 全屏设置为黄色
+ 188          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 189          void lcd_clear_simspi(int color)
+ 190          {
+ 191   1        uint8 i,j;
+ 192   1        lcd_set_region_simspi(0,0,TFT_X_MAX-1,TFT_Y_MAX-1);
+ 193   1        for (i=0;i<TFT_Y_MAX;i++)
+ 194   1            for (j=0;j<TFT_X_MAX;j++)
+ 195   1                lcd_writeData_16bit_simspi(color);
+ 196   1      }
+ 197          
+ 198          
+ 199          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 200          //  @brief      液晶初始化
+ 201          //  @return     void
+ 202          //  @since      v1.0
+ 203          //  Sample usage:               
+ 204          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 205          void lcd_init_simspi(void)
+ 206          { 
+ 207   1        
+ 208   1        
+ 209   1          TFT_REST_SIMSPI(0);
+ 210   1          pca_delay_ms(10);
+ 211   1          TFT_REST_SIMSPI(1);
+ 212   1          pca_delay_ms(120);
+ 213   1          lcd_writeIndex_simspi(0x11);
+ 214   1          pca_delay_ms(120);
+ 215   1      
+ 216   1          lcd_writeIndex_simspi(0xB1); 
+ 217   1          lcd_writeData_simspi(0x01); 
+ 218   1          lcd_writeData_simspi(0x2C); 
+ 219   1          lcd_writeData_simspi(0x2D); 
+ 220   1          
+ 221   1          lcd_writeIndex_simspi(0xB2); 
+ 222   1          lcd_writeData_simspi(0x01); 
+C51 COMPILER V9.60.0.0   SEEKFREE_18TFT                                                    12/08/2023 20:31:21 PAGE 5   
+
+ 223   1          lcd_writeData_simspi(0x2C); 
+ 224   1          lcd_writeData_simspi(0x2D); 
+ 225   1          
+ 226   1          lcd_writeIndex_simspi(0xB3); 
+ 227   1          lcd_writeData_simspi(0x01); 
+ 228   1          lcd_writeData_simspi(0x2C); 
+ 229   1          lcd_writeData_simspi(0x2D); 
+ 230   1          lcd_writeData_simspi(0x01); 
+ 231   1          lcd_writeData_simspi(0x2C); 
+ 232   1          lcd_writeData_simspi(0x2D); 
+ 233   1          
+ 234   1          lcd_writeIndex_simspi(0xB4);
+ 235   1          lcd_writeData_simspi(0x07); 
+ 236   1      
+ 237   1          lcd_writeIndex_simspi(0xC0); 
+ 238   1          lcd_writeData_simspi(0xA2); 
+ 239   1          lcd_writeData_simspi(0x02); 
+ 240   1          lcd_writeData_simspi(0x84); 
+ 241   1          lcd_writeIndex_simspi(0xC1); 
+ 242   1          lcd_writeData_simspi(0xC5); 
+ 243   1          
+ 244   1          lcd_writeIndex_simspi(0xC2); 
+ 245   1          lcd_writeData_simspi(0x0A); 
+ 246   1          lcd_writeData_simspi(0x00); 
+ 247   1          
+ 248   1          lcd_writeIndex_simspi(0xC3); 
+ 249   1          lcd_writeData_simspi(0x8A); 
+ 250   1          lcd_writeData_simspi(0x2A); 
+ 251   1          lcd_writeIndex_simspi(0xC4); 
+ 252   1          lcd_writeData_simspi(0x8A); 
+ 253   1          lcd_writeData_simspi(0xEE); 
+ 254   1          
+ 255   1          lcd_writeIndex_simspi(0xC5);
+ 256   1          lcd_writeData_simspi(0x0E); 
+ 257   1          
+ 258   1          lcd_writeIndex_simspi(0x36);
+ 259   1          switch(TFT_DISPLAY_DIR)//y x v
+ 260   1          {
+ 261   2              case 0: lcd_writeData_simspi(1<<7 | 1<<6 | 0<<5);  break;  //竖屏模式
+ 262   2              case 1: lcd_writeData_simspi(0<<7 | 0<<6 | 0<<5);  break;  //竖屏模式  旋转180
+ 263   2              case 2: lcd_writeData_simspi(1<<7 | 0<<6 | 1<<5);  break;  //横屏模式
+ 264   2              case 3: lcd_writeData_simspi(0<<7 | 1<<6 | 1<<5);  break;  //横屏模式  旋转180
+ 265   2          }
+ 266   1      
+ 267   1          lcd_writeIndex_simspi(0xe0); 
+ 268   1          lcd_writeData_simspi(0x0f); 
+ 269   1          lcd_writeData_simspi(0x1a); 
+ 270   1          lcd_writeData_simspi(0x0f); 
+ 271   1          lcd_writeData_simspi(0x18); 
+ 272   1          lcd_writeData_simspi(0x2f); 
+ 273   1          lcd_writeData_simspi(0x28); 
+ 274   1          lcd_writeData_simspi(0x20); 
+ 275   1          lcd_writeData_simspi(0x22); 
+ 276   1          lcd_writeData_simspi(0x1f); 
+ 277   1          lcd_writeData_simspi(0x1b); 
+ 278   1          lcd_writeData_simspi(0x23); 
+ 279   1          lcd_writeData_simspi(0x37); 
+ 280   1          lcd_writeData_simspi(0x00);   
+ 281   1          lcd_writeData_simspi(0x07); 
+ 282   1          lcd_writeData_simspi(0x02); 
+ 283   1          lcd_writeData_simspi(0x10); 
+ 284   1          
+C51 COMPILER V9.60.0.0   SEEKFREE_18TFT                                                    12/08/2023 20:31:21 PAGE 6   
+
+ 285   1          lcd_writeIndex_simspi(0xe1); 
+ 286   1          lcd_writeData_simspi(0x0f); 
+ 287   1          lcd_writeData_simspi(0x1b); 
+ 288   1          lcd_writeData_simspi(0x0f); 
+ 289   1          lcd_writeData_simspi(0x17); 
+ 290   1          lcd_writeData_simspi(0x33); 
+ 291   1          lcd_writeData_simspi(0x2c); 
+ 292   1          lcd_writeData_simspi(0x29); 
+ 293   1          lcd_writeData_simspi(0x2e); 
+ 294   1          lcd_writeData_simspi(0x30); 
+ 295   1          lcd_writeData_simspi(0x30); 
+ 296   1          lcd_writeData_simspi(0x39); 
+ 297   1          lcd_writeData_simspi(0x3f); 
+ 298   1          lcd_writeData_simspi(0x00); 
+ 299   1          lcd_writeData_simspi(0x07); 
+ 300   1          lcd_writeData_simspi(0x03); 
+ 301   1          lcd_writeData_simspi(0x10);  
+ 302   1          
+ 303   1          lcd_writeIndex_simspi(0x2a);
+ 304   1          lcd_writeData_simspi(0x00);
+ 305   1          lcd_writeData_simspi(0x00+2);
+ 306   1          lcd_writeData_simspi(0x00);
+ 307   1          lcd_writeData_simspi(0x80+2);
+ 308   1          
+ 309   1          lcd_writeIndex_simspi(0x2b);
+ 310   1          lcd_writeData_simspi(0x00);
+ 311   1          lcd_writeData_simspi(0x00+3);
+ 312   1          lcd_writeData_simspi(0x00);
+ 313   1          lcd_writeData_simspi(0x80+3);
+ 314   1          
+ 315   1          lcd_writeIndex_simspi(0xF0); 
+ 316   1          lcd_writeData_simspi(0x01); 
+ 317   1          lcd_writeIndex_simspi(0xF6);
+ 318   1          lcd_writeData_simspi(0x00); 
+ 319   1          
+ 320   1          lcd_writeIndex_simspi(0x3A);
+ 321   1          lcd_writeData_simspi(0x05); 
+ 322   1          lcd_writeIndex_simspi(0x29);
+ 323   1      
+ 324   1          lcd_clear_simspi(WHITE);//全白
+ 325   1      }
+ 326          
+ 327          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 328          //  @brief      液晶画点
+ 329          //  @param      x               坐标x方向的起点
+ 330          //  @param      y               坐标y方向的起点
+ 331          //  @param      dat             需要显示的颜色
+ 332          //  @return     void
+ 333          //  @since      v1.0
+ 334          //  Sample usage:               lcd_drawpoint(0,0,RED);  //坐标0,0画一个红色的点
+ 335          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 336          void lcd_drawpoint_simspi(uint16 x,uint16 y,uint16 color)
+ 337          {
+ 338   1          lcd_set_region_simspi(x,y,x,y);
+ 339   1          lcd_writeData_16bit_simspi(color);
+ 340   1      }
+ 341          
+ 342          
+ 343          
+ 344          //--------------------------------------------------------------------------------------------------------
+C51 COMPILER V9.60.0.0   SEEKFREE_18TFT                                                    12/08/2023 20:31:21 PAGE 7   
+
+             ------------
+ 345          //  @brief      液晶显示字符
+ 346          //  @param      x               坐标x方向的起点 参数范围 0 -（TFT_X_MAX-1）
+ 347          //  @param      y               坐标y方向的起点 参数范围 0 -（TFT_Y_MAX/16-1）
+ 348          //  @param      dat             需要显示的字符
+ 349          //  @return     void
+ 350          //  @since      v1.0
+ 351          //  Sample usage:               lcd_showchar(0,0,'x');//坐标0,0写一个字符x
+ 352          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 353          void lcd_showchar_simspi(uint16 x,uint16 y,const int8 dat)
+ 354          {
+ 355   1        uint8 i,j;
+ 356   1        uint8 temp;
+ 357   1          
+ 358   1        for(i=0; i<16; i++)
+ 359   1        {
+ 360   2          lcd_set_region_simspi(x,y+i,x+7,y+i);
+ 361   2          temp = tft_ascii[dat-32][i];//减32因为是取模是从空格开始取得 空格在ascii中序号是32
+ 362   2          for(j=0; j<8; j++)
+ 363   2          {
+ 364   3            if(temp&0x01) lcd_writeData_16bit_simspi(TFT_PENCOLOR);
+ 365   3            else      lcd_writeData_16bit_simspi(TFT_BGCOLOR);
+ 366   3            temp>>=1;
+ 367   3          }
+ 368   2        }
+ 369   1      }
+ 370          
+ 371          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 372          //  @brief      液晶显示字符串
+ 373          //  @param      x               坐标x方向的起点  参数范围 0 -（TFT_X_MAX-1）
+ 374          //  @param      y               坐标y方向的起点  参数范围 0 -（TFT_Y_MAX/16-1）
+ 375          //  @param      dat             需要显示的字符串
+ 376          //  @return     void
+ 377          //  @since      v1.0
+ 378          //  Sample usage:               lcd_showstr(0,0,"seekfree");
+ 379          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 380          void lcd_showstr_simspi(uint16 x,uint16 y,const int8 dat[])
+ 381          {
+ 382   1        uint16 j;
+ 383   1        
+ 384   1        j = 0;
+ 385   1        while(dat[j] != '\0')
+ 386   1        {
+ 387   2          lcd_showchar_simspi(x+8*j,y*16,dat[j]);
+ 388   2          j++;
+ 389   2        }
+ 390   1      }
+ 391          
+ 392          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 393          //  @brief      液晶显示8位有符号
+ 394          //  @param      x               坐标x方向的起点  参数范围 0 -（TFT_X_MAX-1）
+ 395          //  @param      y               坐标y方向的起点  参数范围 0 -（TFT_Y_MAX/16-1）
+ 396          //  @param      dat             需要显示的变量，数据类型int8
+ 397          //  @return     void
+ 398          //  @since      v1.0
+ 399          //  Sample usage:               lcd_showint8(0,0,x);//x为int8类型
+ 400          //--------------------------------------------------------------------------------------------------------
+             ------------
+C51 COMPILER V9.60.0.0   SEEKFREE_18TFT                                                    12/08/2023 20:31:21 PAGE 8   
+
+ 401          void lcd_showint8_simspi(uint16 x,uint16 y,int8 dat)
+ 402          {
+ 403   1        uint8 a[3];
+ 404   1        uint8 i;
+ 405   1        if(dat<0)
+ 406   1        {
+ 407   2          lcd_showchar_simspi(x,y*16,'-');
+ 408   2          dat = -dat;
+ 409   2        }
+ 410   1        else  lcd_showchar_simspi(x,y*16,' ');
+ 411   1        
+ 412   1        a[0] = dat/100;
+ 413   1        a[1] = dat/10%10;
+ 414   1        a[2] = dat%10;
+ 415   1        i = 0;
+ 416   1        while(i<3)
+ 417   1        {
+ 418   2          lcd_showchar_simspi(x+(8*(i+1)),y*16,'0' + a[i]);
+ 419   2          i++;
+ 420   2        }
+ 421   1      }
+ 422          
+ 423          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 424          //  @brief      液晶显示8位无符号
+ 425          //  @param      x               坐标x方向的起点 参数范围 0 -（TFT_X_MAX-1）
+ 426          //  @param      y               坐标y方向的起点 参数范围 0 -（TFT_Y_MAX/16-1）
+ 427          //  @param      dat             需要显示的变量，数据类型uint8
+ 428          //  @return     void
+ 429          //  @since      v1.0
+ 430          //  Sample usage:               lcd_showuint8(0,0,x);//x为uint8类型
+ 431          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 432          void lcd_showuint8_simspi(uint16 x,uint16 y,uint8 dat)
+ 433          {
+ 434   1        uint8 a[3];
+ 435   1        uint8 i;
+ 436   1        
+ 437   1        a[0] = dat/100;
+ 438   1        a[1] = dat/10%10;
+ 439   1        a[2] = dat%10;
+ 440   1        i = 0;
+ 441   1        while(i<3)
+ 442   1        {
+ 443   2          lcd_showchar_simspi(x+(8*i),y*16,'0' + a[i]);
+ 444   2          i++;
+ 445   2        }
+ 446   1        
+ 447   1      }
+ 448          
+ 449          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 450          //  @brief      液晶显示16位有符号
+ 451          //  @param      x               坐标x方向的起点 参数范围 0 -（TFT_X_MAX-1）
+ 452          //  @param      y               坐标y方向的起点 参数范围 0 -（TFT_Y_MAX/16-1）
+ 453          //  @param      dat             需要显示的变量，数据类型int16
+ 454          //  @return     void
+ 455          //  @since      v1.0
+ 456          //  Sample usage:               lcd_showint16(0,0,x);//x为int16类型
+ 457          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 458          void lcd_showint16_simspi(uint16 x,uint16 y,int16 dat)
+C51 COMPILER V9.60.0.0   SEEKFREE_18TFT                                                    12/08/2023 20:31:21 PAGE 9   
+
+ 459          {
+ 460   1        uint8 a[5];
+ 461   1        uint8 i;
+ 462   1        if(dat<0)
+ 463   1        {
+ 464   2          lcd_showchar_simspi(x,y*16,'-');
+ 465   2          dat = -dat;
+ 466   2        }
+ 467   1        else  lcd_showchar_simspi(x,y*16,' ');
+ 468   1      
+ 469   1        a[0] = dat/10000;
+ 470   1        a[1] = dat/1000%10;
+ 471   1        a[2] = dat/100%10;
+ 472   1        a[3] = dat/10%10;
+ 473   1        a[4] = dat%10;
+ 474   1        
+ 475   1        i = 0;
+ 476   1        while(i<5)
+ 477   1        {
+ 478   2          lcd_showchar_simspi(x+(8*(i+1)),y*16,'0' + a[i]);
+ 479   2          i++;
+ 480   2        }
+ 481   1      }
+ 482          
+ 483          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 484          //  @brief      液晶显示16位无符号
+ 485          //  @param      x               坐标x方向的起点 参数范围 0 -（TFT_X_MAX-1）
+ 486          //  @param      y               坐标y方向的起点 参数范围 0 -（TFT_Y_MAX/16-1）
+ 487          //  @param      dat             需要显示的变量，数据类型uint16
+ 488          //  @return     void
+ 489          //  @since      v1.0
+ 490          //  Sample usage:               lcd_showuint16(0,0,x);//x为uint16类型
+ 491          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 492          void lcd_showuint16_simspi(uint16 x,uint16 y,uint16 dat)
+ 493          {
+ 494   1        uint8 a[5];
+ 495   1        uint8 i;
+ 496   1      
+ 497   1        a[0] = dat/10000;
+ 498   1        a[1] = dat/1000%10;
+ 499   1        a[2] = dat/100%10;
+ 500   1        a[3] = dat/10%10;
+ 501   1        a[4] = dat%10;
+ 502   1        
+ 503   1        i = 0;
+ 504   1        while(i<5)
+ 505   1        {
+ 506   2          lcd_showchar_simspi(x+(8*i),y*16,'0' + a[i]);
+ 507   2          i++;
+ 508   2        }
+ 509   1      }
+ 510          
+ 511          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 512          //  @brief      液晶显示32位有符号(去除整数部分无效的0)
+ 513          //  @param      x               坐标x方向的起点 参数范围 0 -（TFT_X_MAX-1）
+ 514          //  @param      y               坐标y方向的起点 参数范围 0 -（TFT_Y_MAX/16-1）
+ 515          //  @param      dat             需要显示的变量，数据类型uint32
+ 516          //  @param      num             需要显示的位数 最高10位  不包含正负号
+ 517          //  @return     void
+C51 COMPILER V9.60.0.0   SEEKFREE_18TFT                                                    12/08/2023 20:31:21 PAGE 10  
+
+ 518          //  @since      v1.0
+ 519          //  Sample usage:               lcd_showuint32(0,0,x,3);//x可以为int32 uint16 int16 uint8 int8类型
+ 520          //  Sample usage:               负数会显示一个 ‘-’号   正数显示一个空格
+ 521          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 522          void lcd_showint32_simspi(uint16 x,uint16 y,int32 dat,uint8 num)
+ 523          {
+ 524   1          int8    buff[34];
+ 525   1          uint8   length;
+ 526   1          
+ 527   1          if(10<num)      num = 10;
+ 528   1          
+ 529   1          num++;
+ 530   1          if(0>dat)   length = zf_sprintf( &buff[0],"%d",dat);//负数
+ 531   1          else
+ 532   1          {
+ 533   2              buff[0] = ' ';
+ 534   2              length = zf_sprintf( &buff[1],"%d",dat);
+ 535   2              length++;
+ 536   2          }
+ 537   1          while(length < num)
+ 538   1          {
+ 539   2              buff[length] = ' ';
+ 540   2              length++;
+ 541   2          }
+ 542   1          buff[num] = '\0';
+ 543   1      
+ 544   1          lcd_showstr_simspi(x, y, buff); //显示数字
+ 545   1      }
+ 546          
+ 547          
+ 548          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 549          //  @brief      液晶显示浮点数(去除整数部分无效的0)
+ 550          //  @param      x               坐标x方向的起点 参数范围 0 -（TFT_X_MAX-1）
+ 551          //  @param      y               坐标y方向的起点 参数范围 0 -（TFT_Y_MAX/16-1）
+ 552          //  @param      dat             需要显示的变量，数据类型float或double
+ 553          //  @param      num             整数位显示长度   最高10位  
+ 554          //  @param      pointnum        小数位显示长度   最高6位
+ 555          //  @return     void
+ 556          //  @since      v1.0
+ 557          //  Sample usage:               lcd_showfloat(0,0,x,2,3);//显示浮点数   整数显示2位   小数显示三位
+ 558          //  @note                       特别注意当发现小数部分显示的值与你写入的值不一样的时候，
+ 559          //                              可能是由于浮点数精度丢失问题导致的，这并不是显示函数的问题，
+ 560          //                              有关问题的详情，请自行百度学习   浮点数精度丢失问题。
+ 561          //                              负数会显示一个 ‘-’号   正数显示一个空格
+ 562          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 563          void lcd_showfloat_simspi(uint16 x,uint16 y,double dat,uint8 num,uint8 pointnum)
+ 564          {
+ 565   1          uint8   length;
+ 566   1        int8    buff[34];
+ 567   1        int8    start,end,point;
+ 568   1      
+ 569   1        if(6<pointnum)  pointnum = 6;
+ 570   1          if(10<num)      num = 10;
+ 571   1              
+ 572   1          if(0>dat)   length = zf_sprintf( &buff[0],"%f",dat);//负数
+ 573   1          else
+ 574   1          {
+ 575   2              length = zf_sprintf( &buff[1],"%f",dat);
+ 576   2              length++;
+C51 COMPILER V9.60.0.0   SEEKFREE_18TFT                                                    12/08/2023 20:31:21 PAGE 11  
+
+ 577   2          }
+ 578   1          point = length - 7;         //计算小数点位置
+ 579   1          start = point - num - 1;    //计算起始位
+ 580   1          end = point + pointnum + 1; //计算结束位
+ 581   1          while(0>start)//整数位不够  末尾应该填充空格
+ 582   1          {
+ 583   2              buff[end] = ' ';
+ 584   2              end++;
+ 585   2              start++;
+ 586   2          }
+ 587   1          
+ 588   1          if(0>dat)   buff[start] = '-';
+ 589   1          else        buff[start] = ' ';
+ 590   1          
+ 591   1          buff[end] = '\0';
+ 592   1      
+ 593   1          lcd_showstr_simspi(x, y, buff); //显示数字
+ 594   1      }
+ 595          
+ 596          
+ 597          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 598          //  以下函数是使用硬件SPI通信，相比较软件IIC，速度比软件IIC快。
+ 599          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 600          
+ 601          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 602          //  @brief      内部调用，用户无需关心
+ 603          //  @param      void        
+ 604          //  @return             
+ 605          //  @since      v1.0
+ 606          //  Sample usage:               
+ 607          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 608          void lcd_writeIndex(uint8 dat)      //写命令
+ 609          { 
+ 610   1          TFT_CS(0);
+ 611   1        TFT_DC(0);
+ 612   1        spi_mosi(dat);
+ 613   1          TFT_CS(1);
+ 614   1      }
+ 615          
+ 616          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 617          //  @brief      内部调用，用户无需关心
+ 618          //  @param      void        
+ 619          //  @return             
+ 620          //  @since      v1.0
+ 621          //  Sample usage:               
+ 622          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 623          void lcd_writeData(uint8 dat)     //写数据
+ 624          {
+ 625   1      
+ 626   1        
+ 627   1          TFT_CS(0);
+ 628   1        TFT_DC(1);
+ 629   1        spi_mosi(dat);
+ 630   1          TFT_CS(1);
+ 631   1      
+ 632   1      }
+C51 COMPILER V9.60.0.0   SEEKFREE_18TFT                                                    12/08/2023 20:31:21 PAGE 12  
+
+ 633          
+ 634          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 635          //  @brief      内部调用，用户无需关心
+ 636          //  @param      void        
+ 637          //  @return             
+ 638          //  @since      v1.0
+ 639          //  Sample usage:               
+ 640          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 641          void lcd_writedata_16bit(uint16 dat)  //向液晶屏写一个16位数据
+ 642          {
+ 643   1      
+ 644   1          uint8 dat1[2];
+ 645   1          dat1[0] = dat >> 8;
+ 646   1          dat1[1] = (uint8)dat;
+ 647   1        
+ 648   1          TFT_CS(0);
+ 649   1          TFT_DC(1);
+ 650   1        spi_mosi(dat1[0]);
+ 651   1        spi_mosi(dat1[1]);
+ 652   1          TFT_CS(1);
+ 653   1      
+ 654   1      }
+ 655          
+ 656          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 657          //  @brief      液晶坐标设置
+ 658          //  @param      x_start       坐标x方向的起点
+ 659          //  @param      y_start       坐标y方向的起点
+ 660          //  @param      x_end         坐标x方向的终点
+ 661          //  @param      y_end         坐标y方向的终点
+ 662          //  @return     void
+ 663          //  @since      v1.0
+ 664          //  Sample usage:               lcd_set_region(0,0,10,10);// x、y的起点都是0，终点都是10
+ 665          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 666          void lcd_set_region(unsigned int x_start,unsigned int y_start,unsigned int x_end,unsigned int y_end)
+ 667          { 
+ 668   1      
+ 669   1          
+ 670   1      #if (0 == TFT_DISPLAY_DIR || 1 == TFT_DISPLAY_DIR)
+ 671   1          lcd_writeIndex(0x2a);
+ 672   1        lcd_writeData(0x00);
+ 673   1        lcd_writeData(x_start+2);
+ 674   1        lcd_writeData(0x00);
+ 675   1        lcd_writeData(x_end+2);
+ 676   1      
+ 677   1        lcd_writeIndex(0x2b);
+ 678   1        lcd_writeData(0x00);
+ 679   1        lcd_writeData(y_start+1);
+ 680   1        lcd_writeData(0x00);
+ 681   1        lcd_writeData(y_end+1); 
+ 682   1      
+ 683   1      #elif(2 == TFT_DISPLAY_DIR || 3 == TFT_DISPLAY_DIR)
+                  lcd_writeIndex(0x2a);
+                lcd_writeData(0x00);
+                lcd_writeData(x_start+1);
+                lcd_writeData(0x0);
+                lcd_writeData(x_end+1);
+              
+                lcd_writeIndex(0x2b);
+C51 COMPILER V9.60.0.0   SEEKFREE_18TFT                                                    12/08/2023 20:31:21 PAGE 13  
+
+                lcd_writeData(0x00);
+                lcd_writeData(y_start+2);
+                lcd_writeData(0x00);
+                lcd_writeData(y_end+2); 
+              
+              #endif
+ 697   1          
+ 698   1          lcd_writeIndex(0x2c);
+ 699   1      }
+ 700          
+ 701          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 702          //  @brief      液晶清屏函数
+ 703          //  @param      color         颜色设置
+ 704          //  @return     void
+ 705          //  @since      v1.0
+ 706          //  Sample usage:               lcd_clear(YELLOW);// 全屏设置为黄色
+ 707          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 708          void lcd_clear(int color)
+ 709          {
+ 710   1        uint8 i,j;
+ 711   1        lcd_set_region(0,0,TFT_X_MAX-1,TFT_Y_MAX-1);
+ 712   1        for (i=0;i<TFT_Y_MAX;i++)
+ 713   1            for (j=0;j<TFT_X_MAX;j++)
+ 714   1                lcd_writedata_16bit(color);
+ 715   1      }
+ 716          
+ 717          
+ 718          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 719          //  @brief      液晶初始化
+ 720          //  @return     void
+ 721          //  @since      v1.0
+ 722          //  Sample usage:               
+ 723          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 724          void lcd_init(void)
+ 725          { 
+ 726   1        spi_init(TFT_SPIN, TFT_SCL_PIN, TFT_SDA_PIN, TFT_SDA_IN_PIN, 0, MASTER, SPI_SYSclk_DIV_4);
+ 727   1      
+ 728   1          TFT_REST(0);
+ 729   1          pca_delay_ms(10);
+ 730   1          TFT_REST(1);
+ 731   1          pca_delay_ms(120);
+ 732   1          lcd_writeIndex(0x11);
+ 733   1          pca_delay_ms(120);
+ 734   1      
+ 735   1          lcd_writeIndex(0xB1); 
+ 736   1          lcd_writeData(0x01); 
+ 737   1          lcd_writeData(0x2C); 
+ 738   1          lcd_writeData(0x2D); 
+ 739   1          
+ 740   1          lcd_writeIndex(0xB2); 
+ 741   1          lcd_writeData(0x01); 
+ 742   1          lcd_writeData(0x2C); 
+ 743   1          lcd_writeData(0x2D); 
+ 744   1          
+ 745   1          lcd_writeIndex(0xB3); 
+ 746   1          lcd_writeData(0x01); 
+ 747   1          lcd_writeData(0x2C); 
+ 748   1          lcd_writeData(0x2D); 
+C51 COMPILER V9.60.0.0   SEEKFREE_18TFT                                                    12/08/2023 20:31:21 PAGE 14  
+
+ 749   1          lcd_writeData(0x01); 
+ 750   1          lcd_writeData(0x2C); 
+ 751   1          lcd_writeData(0x2D); 
+ 752   1          
+ 753   1          lcd_writeIndex(0xB4);
+ 754   1          lcd_writeData(0x07); 
+ 755   1      
+ 756   1          lcd_writeIndex(0xC0); 
+ 757   1          lcd_writeData(0xA2); 
+ 758   1          lcd_writeData(0x02); 
+ 759   1          lcd_writeData(0x84); 
+ 760   1          lcd_writeIndex(0xC1); 
+ 761   1          lcd_writeData(0xC5); 
+ 762   1          
+ 763   1          lcd_writeIndex(0xC2); 
+ 764   1          lcd_writeData(0x0A); 
+ 765   1          lcd_writeData(0x00); 
+ 766   1          
+ 767   1          lcd_writeIndex(0xC3); 
+ 768   1          lcd_writeData(0x8A); 
+ 769   1          lcd_writeData(0x2A); 
+ 770   1          lcd_writeIndex(0xC4); 
+ 771   1          lcd_writeData(0x8A); 
+ 772   1          lcd_writeData(0xEE); 
+ 773   1          
+ 774   1          lcd_writeIndex(0xC5);
+ 775   1          lcd_writeData(0x0E); 
+ 776   1          
+ 777   1          lcd_writeIndex(0x36);
+ 778   1          switch(TFT_DISPLAY_DIR)//y x v
+ 779   1          {
+ 780   2              case 0: lcd_writeData(1<<7 | 1<<6 | 0<<5);  break;  //竖屏模式
+ 781   2              case 1: lcd_writeData(0<<7 | 0<<6 | 0<<5);  break;  //竖屏模式  旋转180
+ 782   2              case 2: lcd_writeData(1<<7 | 0<<6 | 1<<5);  break;  //横屏模式
+ 783   2              case 3: lcd_writeData(0<<7 | 1<<6 | 1<<5);  break;  //横屏模式  旋转180
+ 784   2          }
+ 785   1      
+ 786   1          lcd_writeIndex(0xe0); 
+ 787   1          lcd_writeData(0x0f); 
+ 788   1          lcd_writeData(0x1a); 
+ 789   1          lcd_writeData(0x0f); 
+ 790   1          lcd_writeData(0x18); 
+ 791   1          lcd_writeData(0x2f); 
+ 792   1          lcd_writeData(0x28); 
+ 793   1          lcd_writeData(0x20); 
+ 794   1          lcd_writeData(0x22); 
+ 795   1          lcd_writeData(0x1f); 
+ 796   1          lcd_writeData(0x1b); 
+ 797   1          lcd_writeData(0x23); 
+ 798   1          lcd_writeData(0x37); 
+ 799   1          lcd_writeData(0x00);  
+ 800   1          lcd_writeData(0x07); 
+ 801   1          lcd_writeData(0x02); 
+ 802   1          lcd_writeData(0x10); 
+ 803   1          
+ 804   1          lcd_writeIndex(0xe1); 
+ 805   1          lcd_writeData(0x0f); 
+ 806   1          lcd_writeData(0x1b); 
+ 807   1          lcd_writeData(0x0f); 
+ 808   1          lcd_writeData(0x17); 
+ 809   1          lcd_writeData(0x33); 
+ 810   1          lcd_writeData(0x2c); 
+C51 COMPILER V9.60.0.0   SEEKFREE_18TFT                                                    12/08/2023 20:31:21 PAGE 15  
+
+ 811   1          lcd_writeData(0x29); 
+ 812   1          lcd_writeData(0x2e); 
+ 813   1          lcd_writeData(0x30); 
+ 814   1          lcd_writeData(0x30); 
+ 815   1          lcd_writeData(0x39); 
+ 816   1          lcd_writeData(0x3f); 
+ 817   1          lcd_writeData(0x00); 
+ 818   1          lcd_writeData(0x07); 
+ 819   1          lcd_writeData(0x03); 
+ 820   1          lcd_writeData(0x10);  
+ 821   1          
+ 822   1          lcd_writeIndex(0x2a);
+ 823   1          lcd_writeData(0x00);
+ 824   1          lcd_writeData(0x00+2);
+ 825   1          lcd_writeData(0x00);
+ 826   1          lcd_writeData(0x80+2);
+ 827   1          
+ 828   1          lcd_writeIndex(0x2b);
+ 829   1          lcd_writeData(0x00);
+ 830   1          lcd_writeData(0x00+3);
+ 831   1          lcd_writeData(0x00);
+ 832   1          lcd_writeData(0x80+3);
+ 833   1          
+ 834   1          lcd_writeIndex(0xF0); 
+ 835   1          lcd_writeData(0x01); 
+ 836   1          lcd_writeIndex(0xF6);
+ 837   1          lcd_writeData(0x00); 
+ 838   1          
+ 839   1          lcd_writeIndex(0x3A);
+ 840   1          lcd_writeData(0x05); 
+ 841   1          lcd_writeIndex(0x29);
+ 842   1      
+ 843   1          lcd_clear(WHITE);//全白
+ 844   1      }
+ 845          
+ 846          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 847          //  @brief      液晶画点
+ 848          //  @param      x               坐标x方向的起点
+ 849          //  @param      y               坐标y方向的起点
+ 850          //  @param      dat             需要显示的颜色
+ 851          //  @return     void
+ 852          //  @since      v1.0
+ 853          //  Sample usage:               lcd_drawpoint(0,0,RED);  //坐标0,0画一个红色的点
+ 854          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 855          void lcd_drawpoint(uint16 x,uint16 y,uint16 color)
+ 856          {
+ 857   1          lcd_set_region(x,y,x,y);
+ 858   1          lcd_writedata_16bit(color);
+ 859   1      }
+ 860          
+ 861          
+ 862          
+ 863          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 864          //  @brief      液晶显示字符
+ 865          //  @param      x               坐标x方向的起点 参数范围 0 -（TFT_X_MAX-1）
+ 866          //  @param      y               坐标y方向的起点 参数范围 0 -（TFT_Y_MAX/16-1）
+ 867          //  @param      dat             需要显示的字符
+ 868          //  @return     void
+ 869          //  @since      v1.0
+C51 COMPILER V9.60.0.0   SEEKFREE_18TFT                                                    12/08/2023 20:31:21 PAGE 16  
+
+ 870          //  Sample usage:               lcd_showchar(0,0,'x');//坐标0,0写一个字符x
+ 871          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 872          void lcd_showchar(uint16 x,uint16 y,const int8 dat)
+ 873          {
+ 874   1        uint8 i,j;
+ 875   1        uint8 temp;
+ 876   1          
+ 877   1        for(i=0; i<16; i++)
+ 878   1        {
+ 879   2          lcd_set_region(x,y+i,x+7,y+i);
+ 880   2          temp = tft_ascii[dat-32][i];//减32因为是取模是从空格开始取得 空格在ascii中序号是32
+ 881   2          for(j=0; j<8; j++)
+ 882   2          {
+ 883   3            if(temp&0x01) lcd_writedata_16bit(TFT_PENCOLOR);
+ 884   3            else      lcd_writedata_16bit(TFT_BGCOLOR);
+ 885   3            temp>>=1;
+ 886   3          }
+ 887   2        }
+ 888   1      }
+ 889          
+ 890          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 891          //  @brief      液晶显示字符串
+ 892          //  @param      x               坐标x方向的起点  参数范围 0 -（TFT_X_MAX-1）
+ 893          //  @param      y               坐标y方向的起点  参数范围 0 -（TFT_Y_MAX/16-1）
+ 894          //  @param      dat             需要显示的字符串
+ 895          //  @return     void
+ 896          //  @since      v1.0
+ 897          //  Sample usage:               lcd_showstr(0,0,"seekfree");
+ 898          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 899          void lcd_showstr(uint16 x,uint16 y,const int8 dat[])
+ 900          {
+ 901   1        uint16 j;
+ 902   1        
+ 903   1        j = 0;
+ 904   1        while(dat[j] != '\0')
+ 905   1        {
+ 906   2          lcd_showchar(x+8*j,y*16,dat[j]);
+ 907   2          j++;
+ 908   2        }
+ 909   1      }
+ 910          
+ 911          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 912          //  @brief      液晶显示8位有符号
+ 913          //  @param      x               坐标x方向的起点  参数范围 0 -（TFT_X_MAX-1）
+ 914          //  @param      y               坐标y方向的起点  参数范围 0 -（TFT_Y_MAX/16-1）
+ 915          //  @param      dat             需要显示的变量，数据类型int8
+ 916          //  @return     void
+ 917          //  @since      v1.0
+ 918          //  Sample usage:               lcd_showint8(0,0,x);//x为int8类型
+ 919          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 920          void lcd_showint8(uint16 x,uint16 y,int8 dat)
+ 921          {
+ 922   1        uint8 a[3];
+ 923   1        uint8 i;
+ 924   1        if(dat<0)
+ 925   1        {
+ 926   2          lcd_showchar(x,y*16,'-');
+C51 COMPILER V9.60.0.0   SEEKFREE_18TFT                                                    12/08/2023 20:31:21 PAGE 17  
+
+ 927   2          dat = -dat;
+ 928   2        }
+ 929   1        else  lcd_showchar(x,y*16,' ');
+ 930   1        
+ 931   1        a[0] = dat/100;
+ 932   1        a[1] = dat/10%10;
+ 933   1        a[2] = dat%10;
+ 934   1        i = 0;
+ 935   1        while(i<3)
+ 936   1        {
+ 937   2          lcd_showchar(x+(8*(i+1)),y*16,'0' + a[i]);
+ 938   2          i++;
+ 939   2        }
+ 940   1      }
+ 941          
+ 942          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 943          //  @brief      液晶显示8位无符号
+ 944          //  @param      x               坐标x方向的起点 参数范围 0 -（TFT_X_MAX-1）
+ 945          //  @param      y               坐标y方向的起点 参数范围 0 -（TFT_Y_MAX/16-1）
+ 946          //  @param      dat             需要显示的变量，数据类型uint8
+ 947          //  @return     void
+ 948          //  @since      v1.0
+ 949          //  Sample usage:               lcd_showuint8(0,0,x);//x为uint8类型
+ 950          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 951          void lcd_showuint8(uint16 x,uint16 y,uint8 dat)
+ 952          {
+ 953   1        uint8 a[3];
+ 954   1        uint8 i;
+ 955   1        
+ 956   1        a[0] = dat/100;
+ 957   1        a[1] = dat/10%10;
+ 958   1        a[2] = dat%10;
+ 959   1        i = 0;
+ 960   1        while(i<3)
+ 961   1        {
+ 962   2          lcd_showchar(x+(8*i),y*16,'0' + a[i]);
+ 963   2          i++;
+ 964   2        }
+ 965   1        
+ 966   1      }
+ 967          
+ 968          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 969          //  @brief      液晶显示16位有符号
+ 970          //  @param      x               坐标x方向的起点 参数范围 0 -（TFT_X_MAX-1）
+ 971          //  @param      y               坐标y方向的起点 参数范围 0 -（TFT_Y_MAX/16-1）
+ 972          //  @param      dat             需要显示的变量，数据类型int16
+ 973          //  @return     void
+ 974          //  @since      v1.0
+ 975          //  Sample usage:               lcd_showint16(0,0,x);//x为int16类型
+ 976          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 977          void lcd_showint16(uint16 x,uint16 y,int16 dat)
+ 978          {
+ 979   1        uint8 a[5];
+ 980   1        uint8 i;
+ 981   1        if(dat<0)
+ 982   1        {
+ 983   2          lcd_showchar(x,y*16,'-');
+ 984   2          dat = -dat;
+C51 COMPILER V9.60.0.0   SEEKFREE_18TFT                                                    12/08/2023 20:31:21 PAGE 18  
+
+ 985   2        }
+ 986   1        else  lcd_showchar(x,y*16,' ');
+ 987   1      
+ 988   1        a[0] = dat/10000;
+ 989   1        a[1] = dat/1000%10;
+ 990   1        a[2] = dat/100%10;
+ 991   1        a[3] = dat/10%10;
+ 992   1        a[4] = dat%10;
+ 993   1        
+ 994   1        i = 0;
+ 995   1        while(i<5)
+ 996   1        {
+ 997   2          lcd_showchar(x+(8*(i+1)),y*16,'0' + a[i]);
+ 998   2          i++;
+ 999   2        }
+1000   1      }
+1001          
+1002          //--------------------------------------------------------------------------------------------------------
+             ------------
+1003          //  @brief      液晶显示16位无符号
+1004          //  @param      x               坐标x方向的起点 参数范围 0 -（TFT_X_MAX-1）
+1005          //  @param      y               坐标y方向的起点 参数范围 0 -（TFT_Y_MAX/16-1）
+1006          //  @param      dat             需要显示的变量，数据类型uint16
+1007          //  @return     void
+1008          //  @since      v1.0
+1009          //  Sample usage:               lcd_showuint16(0,0,x);//x为uint16类型
+1010          //--------------------------------------------------------------------------------------------------------
+             ------------
+1011          void lcd_showuint16(uint16 x,uint16 y,uint16 dat)
+1012          {
+1013   1        uint8 a[5];
+1014   1        uint8 i;
+1015   1      
+1016   1        a[0] = dat/10000;
+1017   1        a[1] = dat/1000%10;
+1018   1        a[2] = dat/100%10;
+1019   1        a[3] = dat/10%10;
+1020   1        a[4] = dat%10;
+1021   1        
+1022   1        i = 0;
+1023   1        while(i<5)
+1024   1        {
+1025   2          lcd_showchar(x+(8*i),y*16,'0' + a[i]);
+1026   2          i++;
+1027   2        }
+1028   1      }
+1029          
+1030          //--------------------------------------------------------------------------------------------------------
+             ------------
+1031          //  @brief      液晶显示32位有符号(去除整数部分无效的0)
+1032          //  @param      x               坐标x方向的起点 参数范围 0 -（TFT_X_MAX-1）
+1033          //  @param      y               坐标y方向的起点 参数范围 0 -（TFT_Y_MAX/16-1）
+1034          //  @param      dat             需要显示的变量，数据类型uint32
+1035          //  @param      num             需要显示的位数 最高10位  不包含正负号
+1036          //  @return     void
+1037          //  @since      v1.0
+1038          //  Sample usage:               lcd_showuint32(0,0,x,3);//x可以为int32 uint16 int16 uint8 int8类型
+1039          //  Sample usage:               负数会显示一个 ‘-’号   正数显示一个空格
+1040          //--------------------------------------------------------------------------------------------------------
+             ------------
+1041          void lcd_showint32(uint16 x,uint16 y,int32 dat,uint8 num)
+1042          {
+C51 COMPILER V9.60.0.0   SEEKFREE_18TFT                                                    12/08/2023 20:31:21 PAGE 19  
+
+1043   1          int8    buff[34];
+1044   1          uint8   length;
+1045   1          
+1046   1          if(10<num)      num = 10;
+1047   1          
+1048   1          num++;
+1049   1          if(0>dat)   length = zf_sprintf( &buff[0],"%d",dat);//负数
+1050   1          else
+1051   1          {
+1052   2              buff[0] = ' ';
+1053   2              length = zf_sprintf( &buff[1],"%d",dat);
+1054   2              length++;
+1055   2          }
+1056   1          while(length < num)
+1057   1          {
+1058   2              buff[length] = ' ';
+1059   2              length++;
+1060   2          }
+1061   1          buff[num] = '\0';
+1062   1      
+1063   1          lcd_showstr(x, y, buff);  //显示数字
+1064   1      }
+1065          
+1066          
+1067          //--------------------------------------------------------------------------------------------------------
+             ------------
+1068          //  @brief      液晶显示浮点数(去除整数部分无效的0)
+1069          //  @param      x               坐标x方向的起点 参数范围 0 -（TFT_X_MAX-1）
+1070          //  @param      y               坐标y方向的起点 参数范围 0 -（TFT_Y_MAX/16-1）
+1071          //  @param      dat             需要显示的变量，数据类型float或double
+1072          //  @param      num             整数位显示长度   最高10位  
+1073          //  @param      pointnum        小数位显示长度   最高6位
+1074          //  @return     void
+1075          //  @since      v1.0
+1076          //  Sample usage:               lcd_showfloat(0,0,x,2,3);//显示浮点数   整数显示2位   小数显示三位
+1077          //  @note                       特别注意当发现小数部分显示的值与你写入的值不一样的时候，
+1078          //                              可能是由于浮点数精度丢失问题导致的，这并不是显示函数的问题，
+1079          //                              有关问题的详情，请自行百度学习   浮点数精度丢失问题。
+1080          //                              负数会显示一个 ‘-’号   正数显示一个空格
+1081          //--------------------------------------------------------------------------------------------------------
+             ------------
+1082          void lcd_showfloat(uint16 x,uint16 y,double dat,uint8 num,uint8 pointnum)
+1083          {
+1084   1          uint8   length;
+1085   1        int8    buff[34];
+1086   1        int8    start,end,point;
+1087   1      
+1088   1        if(6<pointnum)  pointnum = 6;
+1089   1          if(10<num)      num = 10;
+1090   1              
+1091   1          if(0>dat)   length = zf_sprintf( &buff[0],"%f",dat);//负数
+1092   1          else
+1093   1          {
+1094   2              length = zf_sprintf( &buff[1],"%f",dat);
+1095   2              length++;
+1096   2          }
+1097   1          point = length - 7;         //计算小数点位置
+1098   1          start = point - num - 1;    //计算起始位
+1099   1          end = point + pointnum + 1; //计算结束位
+1100   1          while(0>start)//整数位不够  末尾应该填充空格
+1101   1          {
+1102   2              buff[end] = ' ';
+C51 COMPILER V9.60.0.0   SEEKFREE_18TFT                                                    12/08/2023 20:31:21 PAGE 20  
+
+1103   2              end++;
+1104   2              start++;
+1105   2          }
+1106   1          
+1107   1          if(0>dat)   buff[start] = '-';
+1108   1          else        buff[start] = ' ';
+1109   1          
+1110   1          buff[end] = '\0';
+1111   1      
+1112   1          lcd_showstr(x, y, buff);  //显示数字
+1113   1      }
+1114          
+1115          
+1116          
+1117          //--------------------------------------------------------------------------------------------------------
+             ------------
+1118          //  @brief      显示40*40 QQ图片
+1119          //  @param      *p          图像数组地址
+1120          //  @return     void
+1121          //  @since      v1.0
+1122          //  Sample usage:          
+1123          //--------------------------------------------------------------------------------------------------------
+             ------------
+1124          void showimage(const unsigned char *p) 
+1125          {
+1126   1          int i,j,k; 
+1127   1        unsigned char picH,picL;
+1128   1        lcd_clear(WHITE); //清屏  
+1129   1        
+1130   1        for(k=0;k<4;k++)
+1131   1        {
+1132   2            for(j=0;j<3;j++)
+1133   2          { 
+1134   3            lcd_set_region(40*j,40*k,40*j+39,40*k+39);    //坐标设置
+1135   3              for(i=0;i<40*40;i++)
+1136   3             {  
+1137   4              picL=*(p+i*2);  //数据低位在前
+1138   4              picH=*(p+i*2+1);        
+1139   4              lcd_writedata_16bit(picH<<8|picL);              
+1140   4             }  
+1141   3           }
+1142   2        }   
+1143   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   5496    ----
+   CONSTANT SIZE    =      6    ----
+   XDATA SIZE       =   ----     339
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

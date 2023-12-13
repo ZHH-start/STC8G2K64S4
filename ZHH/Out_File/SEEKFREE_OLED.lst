@@ -1,0 +1,1128 @@
+C51 COMPILER V9.60.0.0   SEEKFREE_OLED                                                     12/06/2023 17:38:16 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE SEEKFREE_OLED
+OBJECT MODULE PLACED IN .\Out_File\SEEKFREE_OLED.obj
+COMPILER INVOKED BY: C:\Keil_v5_C51\C51\BIN\C51.EXE ..\Libraries\seekfree_peripheral\SEEKFREE_OLED.c LARGE OMF2 OPTIMIZE
+                    -(8,SPEED) BROWSE INCDIR(..\Libraries\libraries;..\Libraries\seekfree_libraries;..\Libraries\seekfree_peripheral;\USER;..
+                    -\CODE) DEBUG PRINT(.\Out_File\SEEKFREE_OLED.lst) TABS(2) OBJECT(.\Out_File\SEEKFREE_OLED.obj)
+
+line level    source
+
+   1          /*********************************************************************************************************
+             -************
+   2           * COPYRIGHT NOTICE
+   3           * Copyright (c) 2018,逐飞科技
+   4           * All rights reserved.
+   5           * 技术讨论QQ群：一群：179029047(已满)  二群：244861897
+   6           *
+   7           * 以下所有内容版权均属逐飞科技所有，未经允许不得用于商业用途，
+   8           * 欢迎各位使用并传播本程序，修改内容时必须保留逐飞科技的版权声明。
+   9           *
+  10           * @file          OLED
+  11           * @company       成都逐飞科技有限公司
+  12           * @author        逐飞科技(QQ3184284598)
+  13           * @version       查看doc内version文件 版本说明
+  14           * @Software    IAR 8.3 or MDK 5.24
+  15           * @Taobao      https://seekfree.taobao.com/
+  16           * @date          2019-04-30
+  17           * @note    
+  18                    接线定义：
+  19                    ------------------------------------ 
+  20                        OLED液晶    单片机                        
+  21                        D0          查看SEEKFREE_OLED文件内的OLED_SCL_PIN   宏定义
+  22                        D1          查看SEEKFREE_OLED文件内的OLED_SDA_PIN   宏定义            
+  23                        RES         查看SEEKFREE_OLED文件内的OLED_RST_PIN   宏定义    
+  24                        DC          查看SEEKFREE_OLED文件内的OLED_DC_PIN    宏定义
+  25                        CS          查看SEEKFREE_OLED文件内的OLED_CSN_PIN    宏定义
+  26                    ------------------------------------ 
+  27           *********************************************************************************************************
+             -***********/
+  28          
+  29          
+  30          
+  31          
+  32          
+  33          #include "SEEKFREE_OLED.h"
+  34          #include "SEEKFREE_FONT.h"
+  35          #include "SEEKFREE_PRINTF.h"
+  36          #include "zf_spi.h"
+  37          #include "zf_pca_delay.h"
+  38          
+  39          //--------------------------------------------------------------------------------------------------------
+             ------------
+  40          //  以下函数是使用软件SPI通信，相比较硬件SPI，软件SPI引脚更加灵活，可以使用任意普通IO
+  41          //--------------------------------------------------------------------------------------------------------
+             ------------
+  42          
+  43          //--------------------------------------------------------------------------------------------------------
+             ------------
+  44          //  @brief      内部调用，用户无需关心
+  45          //  @param      void        
+  46          //  @return             
+  47          //  @since      v1.0
+  48          //  Sample usage:               
+C51 COMPILER V9.60.0.0   SEEKFREE_OLED                                                     12/06/2023 17:38:16 PAGE 2   
+
+  49          //--------------------------------------------------------------------------------------------------------
+             ------------
+  50          void oled_wrdat(uint8 dat)
+  51          {
+  52   1        uint8 i=8;
+  53   1        
+  54   1          OLED_CS(0); //使能信号端，拉低时正常使用
+  55   1        OLED_DC(1);
+  56   1        OLED_SCL(0);
+  57   1        while(i--)
+  58   1        {
+  59   2            if(dat&0x80){OLED_SDA(1);}
+  60   2            else{OLED_SDA(0);}
+  61   2            OLED_SCL(1);
+  62   2          
+  63   2            OLED_SCL(0);
+  64   2            dat<<=1;
+  65   2        }
+  66   1          OLED_CS(1); //使能信号端，拉低时正常使用
+  67   1      }
+  68          
+  69          //--------------------------------------------------------------------------------------------------------
+             ------------
+  70          //  @brief      内部调用，用户无需关心
+  71          //  @param      void        
+  72          //  @return             
+  73          //  @since      v1.0
+  74          //  Sample usage:               
+  75          //--------------------------------------------------------------------------------------------------------
+             ------------
+  76          //void oled_wr6dat(uint8 dat)
+  77          //{
+  78          //  uint8 i=6;
+  79          //    
+  80          //  OLED_CS(0); //使能信号端，拉低时正常使用
+  81          //  OLED_DC(1);
+  82          //  OLED_SCL(0);
+  83          //  while(i--)
+  84          //  {
+  85          //    if(dat&0x80){OLED_SDA(1);}
+  86          //    else{OLED_SDA(0);}
+  87          //    OLED_SCL(1);
+  88          //    OLED_SCL(0);
+  89          //    dat<<=1;
+  90          //  }
+  91          //    OLED_CS(1); //使能信号端，拉低时正常使用
+  92          //}
+  93          
+  94          //--------------------------------------------------------------------------------------------------------
+             ------------
+  95          //  @brief      内部调用，用户无需关心
+  96          //  @param      void        
+  97          //  @return             
+  98          //  @since      v1.0
+  99          //  Sample usage:               
+ 100          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 101          void oled_wrcmd(uint8 cmd)
+ 102          {
+ 103   1        uint8 i=8;
+ 104   1          
+ 105   1        OLED_CS(0); //使能信号端，拉低时正常使用
+C51 COMPILER V9.60.0.0   SEEKFREE_OLED                                                     12/06/2023 17:38:16 PAGE 3   
+
+ 106   1        OLED_DC(0);
+ 107   1        OLED_SCL(0);;
+ 108   1        
+ 109   1        while(i--)
+ 110   1        {
+ 111   2          if(cmd&0x80){OLED_SDA(1);}
+ 112   2          else{OLED_SDA(0);}
+ 113   2          OLED_SCL(1);
+ 114   2          
+ 115   2          OLED_SCL(0);
+ 116   2          cmd<<=1;
+ 117   2        }
+ 118   1          OLED_CS(1); //使能信号端，拉低时正常使用
+ 119   1      }
+ 120          
+ 121          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 122          //  @brief      内部调用，用户无需关心
+ 123          //  @param      void        
+ 124          //  @return             
+ 125          //  @since      v1.0
+ 126          //  Sample usage:               
+ 127          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 128          void oled_hexascii(uint16 hex,int8 * Print)
+ 129          {
+ 130   1        uint8 hexcheck ;
+ 131   1        uint8 TEMP ;
+ 132   1        TEMP = 6 ;
+ 133   1        Print[TEMP ]='\0';
+ 134   1        while(TEMP)
+ 135   1        {
+ 136   2            TEMP -- ;
+ 137   2            hexcheck  =  hex%10 ;
+ 138   2            hex   /=10 ;
+ 139   2            Print[TEMP ]  = hexcheck + 0x30 ;
+ 140   2        }
+ 141   1        
+ 142   1      }
+ 143          
+ 144          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 145          //  @brief      OLED初始化函数
+ 146          //  @param      NULL
+ 147          //  @return     void
+ 148          //  @since      v1.0
+ 149          //  Sample usage:     
+ 150          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 151          void oled_init(void)
+ 152          {
+ 153   1        
+ 154   1        OLED_CS(1);
+ 155   1        OLED_SCL(1);
+ 156   1        
+ 157   1        OLED_RST(0);
+ 158   1        pca_delay_ms(50);
+ 159   1        OLED_RST(1);
+ 160   1        
+ 161   1        oled_wrcmd(0xae);//--turn off oled panel
+ 162   1        oled_wrcmd(0x00);//---set low column address
+ 163   1        oled_wrcmd(0x10);//---set high column address
+C51 COMPILER V9.60.0.0   SEEKFREE_OLED                                                     12/06/2023 17:38:16 PAGE 4   
+
+ 164   1        oled_wrcmd(0x40);//--set start line address  Set Mapping RAM Display Start Line (0x00~0x3F)
+ 165   1        oled_wrcmd(0x81);//--set contrast control register
+ 166   1        oled_wrcmd(Brightness); // Set SEG Output Current Brightness
+ 167   1          
+ 168   1      #if (0 == OLED_DISPLAY_DIR)
+ 169   1        oled_wrcmd(0xa1);//--Set SEG/Column Mapping     0xa0左右反置 0xa1正常
+ 170   1        oled_wrcmd(0xc8);//Set COM/Row Scan Direction   0xc0上下反置 0xc8正常
+ 171   1      #else
+                  oled_wrcmd(0xa0);//--Set SEG/Column Mapping     0xa0左右反置 0xa1正常
+                oled_wrcmd(0xc0);//Set COM/Row Scan Direction   0xc0上下反置 0xc8正常
+              #endif
+ 175   1          
+ 176   1        oled_wrcmd(0xa6);//--set normal display
+ 177   1        oled_wrcmd(0xa8);//--set multiplex ratio(1 to 64)
+ 178   1        oled_wrcmd(0x3f);//--1/64 duty
+ 179   1        oled_wrcmd(0xd3);//-set display offset  Shift Mapping RAM Counter (0x00~0x3F)
+ 180   1        oled_wrcmd(0x00);//-not offset
+ 181   1        oled_wrcmd(0xd5);//--set display clock divide ratio/oscillator frequency
+ 182   1        oled_wrcmd(0x80);//--set divide ratio, Set Clock as 100 Frames/Sec
+ 183   1        oled_wrcmd(0xd9);//--set pre-charge period
+ 184   1        oled_wrcmd(0xf1);//Set Pre-Charge as 15 Clocks & Discharge as 1 Clock
+ 185   1        oled_wrcmd(0xda);//--set com pins hardware configuration
+ 186   1        oled_wrcmd(0x12);
+ 187   1        oled_wrcmd(0xdb);//--set vcomh
+ 188   1        oled_wrcmd(0x40);//Set VCOM Deselect Level
+ 189   1        oled_wrcmd(0x20);//-Set Page Addressing Mode (0x00/0x01/0x02)
+ 190   1        oled_wrcmd(0x02);//
+ 191   1        oled_wrcmd(0x8d);//--set Charge Pump enable/disable
+ 192   1        oled_wrcmd(0x14);//--set(0x10) disable
+ 193   1        oled_wrcmd(0xa4);// Disable Entire Display On (0xa4/0xa5)
+ 194   1        oled_wrcmd(0xa6);// Disable Inverse Display On (0xa6/a7)
+ 195   1        oled_wrcmd(0xaf);//--turn on oled panel
+ 196   1        oled_fill(0x00);  //初始清屏
+ 197   1        oled_set_pos(0,0);
+ 198   1      }
+ 199          
+ 200          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 201          //  @brief      OLED显示坐标设置
+ 202          //  @param      x     x轴坐标设置0-127
+ 203          //  @param      y           y轴坐标设置0-7
+ 204          //  @return     void
+ 205          //  @since      v1.0
+ 206          //  Sample usage:     
+ 207          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 208          void oled_set_pos(uint8 x, uint8 y)
+ 209          {
+ 210   1      
+ 211   1          
+ 212   1          oled_wrcmd(0xb0+y);
+ 213   1          oled_wrcmd(((x&0xf0)>>4)|0x10);
+ 214   1          oled_wrcmd((x&0x0f)|0x00);
+ 215   1      }
+ 216          
+ 217          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 218          //  @brief      OLED清屏函数
+ 219          //  @param      bmp_data  填充颜色选着(0x00 or 0xff)
+ 220          //  @return     void
+ 221          //  @since      v1.0
+ 222          //  Sample usage:     
+C51 COMPILER V9.60.0.0   SEEKFREE_OLED                                                     12/06/2023 17:38:16 PAGE 5   
+
+ 223          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 224          void oled_fill(uint8 bmp_data)
+ 225          {
+ 226   1        uint8 y,x;
+ 227   1        
+ 228   1        for(y=0;y<8;y++)
+ 229   1        {
+ 230   2          oled_wrcmd(0xb0+y);
+ 231   2          oled_wrcmd(0x01);
+ 232   2          oled_wrcmd(0x10);
+ 233   2          for(x=0;x<X_WIDTH;x++)  oled_wrdat(bmp_data); 
+ 234   2        }
+ 235   1      }
+ 236          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 237          //  @brief      OLED控制一个坐标下8个像素的点亮与熄灭
+ 238          //  @param      x     x轴坐标设置0-127
+ 239          //  @param      y           y轴坐标设置0-7
+ 240          //  @return     void
+ 241          //  @since      v1.0
+ 242          //  Sample usage:     oled_putpixel(0,0,0xff);//将0,0坐标 8个点全部点亮
+ 243          //  Sample usage:     oled_putpixel(0,0,0x01);//将0,0坐标 最低位点亮其余7个熄灭
+ 244          //  @note                   同理可以任意控制一个坐标下8个像素的点亮与熄灭
+ 245          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 246          void oled_putpixel(uint8 x,uint8 y,uint8 data1)
+ 247          {
+ 248   1        oled_set_pos(x,y);
+ 249   1          oled_wrcmd(0xb0+y);
+ 250   1        oled_wrcmd(((x&0xf0)>>4)|0x10);
+ 251   1        oled_wrcmd((x&0x0f)|0x00);
+ 252   1        oled_wrdat(data1);
+ 253   1      }
+ 254          
+ 255          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 256          //  @brief      OLED关闭一个坐标所有亮点
+ 257          //  @param      x     x轴坐标设置0-127
+ 258          //  @param      y           y轴坐标设置0-7
+ 259          //  @return     void
+ 260          //  @since      v1.0
+ 261          //  Sample usage:     
+ 262          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 263          void oled_clrpixel(uint8 x,uint8 y)
+ 264          {
+ 265   1        oled_set_pos(x,y);
+ 266   1          oled_wrcmd(0xb0+y);
+ 267   1        oled_wrcmd(((x&0xf0)>>4)|0x10);
+ 268   1        oled_wrcmd((x&0x0f)|0x00);
+ 269   1        oled_wrdat(0x00);
+ 270   1      }
+ 271          
+ 272          
+ 273          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 274          //  @brief      OLED显示字符串(6*8字体)
+ 275          //  @param      x     x轴坐标设置0-127
+ 276          //  @param      y           y轴坐标设置0-7
+ 277          //  @param      ch[]        字符串
+ 278          //  @return     void
+C51 COMPILER V9.60.0.0   SEEKFREE_OLED                                                     12/06/2023 17:38:16 PAGE 6   
+
+ 279          //  @since      v1.0
+ 280          //  Sample usage:     
+ 281          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 282          void oled_p6x8str(uint8 x,uint8 y,const int8 ch[])
+ 283          {
+ 284   1        uint8 c=0,i=0,j=0;
+ 285   1        while (ch[j]!='\0')
+ 286   1        {
+ 287   2            c =ch[j]-32;
+ 288   2            if(x>126){x=0;y++;}
+ 289   2            oled_set_pos(x,y);
+ 290   2            for(i=0;i<6;i++)  oled_wrdat(oled_6x8[c][i]);
+ 291   2            x+=6;
+ 292   2            j++;
+ 293   2        }
+ 294   1      }
+ 295          
+ 296          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 297          //  @brief      OLED显示字符串(8*16字体)
+ 298          //  @param      x     x轴坐标设置0-127
+ 299          //  @param      y           y轴坐标设置0-7
+ 300          //  @param      ch[]        字符串
+ 301          //  @return     void
+ 302          //  @since      v1.0
+ 303          //  Sample usage:     务必注意，本函数字符列高位16，因此y应该是每次递增2
+ 304          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 305          void oled_p8x16str(uint8 x,uint8 y,const int8 ch[])
+ 306          {
+ 307   1        uint8 c=0,i=0,j=0;
+ 308   1        
+ 309   1        while (ch[j]!='\0')
+ 310   1        {
+ 311   2            c =ch[j]-32;
+ 312   2            if(x>120){x=0;y++;}
+ 313   2          
+ 314   2            oled_set_pos(x,y);
+ 315   2            for(i=0;i<8;i++)  oled_wrdat(oled_8x16[c*16+i]);
+ 316   2              
+ 317   2            oled_set_pos(x,y+1);
+ 318   2            for(i=0;i<8;i++)  oled_wrdat(oled_8x16[c*16+i+8]);
+ 319   2              
+ 320   2            x+=8;
+ 321   2            j++;
+ 322   2        }
+ 323   1      }
+ 324          
+ 325          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 326          //  @brief      OLED显示无符号数(6*8字体)
+ 327          //  @param      x     x轴坐标设置0-127
+ 328          //  @param      y           y轴坐标设置0-7
+ 329          //  @param      num         无符号数
+ 330          //  @return     void
+ 331          //  @since      v1.0
+ 332          //  Sample usage:     
+ 333          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 334          void oled_uint16(uint8 x, uint8 y, uint16 num)
+ 335          {
+C51 COMPILER V9.60.0.0   SEEKFREE_OLED                                                     12/06/2023 17:38:16 PAGE 7   
+
+ 336   1        int8 ch[7];
+ 337   1        
+ 338   1        oled_hexascii(num,ch);
+ 339   1          
+ 340   1          oled_p6x8str(x, y, &ch[1]);     //显示数字  6*8字体
+ 341   1          //oled_p8x16str(x, y, &ch[1]);  //显示数字  8*16字体
+ 342   1      }
+ 343          
+ 344          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 345          //  @brief      OLED显示有符号数(6*8字体)
+ 346          //  @param      x     x轴坐标设置0-127
+ 347          //  @param      y           y轴坐标设置0-7
+ 348          //  @param      num         有符号数
+ 349          //  @return     void
+ 350          //  @since      v1.0
+ 351          //  Sample usage:     
+ 352          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 353          void oled_int16(uint8 x, uint8 y, int16 num)
+ 354          {
+ 355   1        int8 ch[7];
+ 356   1        if(num<0)   {num = -num;oled_p6x8str(x, y, "-");}
+ 357   1        else         oled_p6x8str(x, y, " ");
+ 358   1        x+=6;       
+ 359   1          
+ 360   1        oled_hexascii(num,ch);
+ 361   1          oled_p6x8str(x, y, &ch[1]);     //显示数字  6*8字体
+ 362   1      }
+ 363          
+ 364          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 365          //  @brief      OLED显示32位有符号(去除整数部分无效的0)
+ 366          //  @param      x     x轴坐标设置0-127
+ 367          //  @param      y           y轴坐标设置0-7
+ 368          //  @param      dat         需要显示的变量，数据类型uint32
+ 369          //  @param      num         需要显示的位数 最高10位  不包含正负号
+ 370          //  @return     void
+ 371          //  @since      v1.0
+ 372          //  Sample usage:           oled_printf_int32(0,0,x,5);//x可以为int32 uint16 int16 uint8 int8类型
+ 373          //  Sample usage:           负数会显示一个 ‘-’号   正数显示一个空格
+ 374          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 375          void oled_printf_int32(uint16 x,uint16 y,int32 dat,uint8 num)
+ 376          {
+ 377   1          int8    buff[34];
+ 378   1          uint8   length;
+ 379   1          
+ 380   1          if(10<num)      num = 10;
+ 381   1          
+ 382   1          num++;
+ 383   1          if(0>dat)   length = zf_sprintf( &buff[0],"%d",dat);//负数
+ 384   1          else
+ 385   1          {
+ 386   2              buff[0] = ' ';
+ 387   2              length = zf_sprintf( &buff[1],"%d",dat);
+ 388   2              length++;
+ 389   2          }
+ 390   1          while(length < num)
+ 391   1          {
+ 392   2              buff[length] = ' ';
+ 393   2              length++;
+C51 COMPILER V9.60.0.0   SEEKFREE_OLED                                                     12/06/2023 17:38:16 PAGE 8   
+
+ 394   2          }
+ 395   1          buff[num] = '\0';
+ 396   1          
+ 397   1          oled_p6x8str(x, y, buff); //显示数字
+ 398   1      }
+ 399          
+ 400          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 401          //  @brief      OLED显示浮点数(去除整数部分无效的0)
+ 402          //  @param      x     x轴坐标设置0-127
+ 403          //  @param      y           y轴坐标设置0-7
+ 404          //  @param      dat         需要显示的变量，数据类型float或double
+ 405          //  @param      num         整数位显示长度   最高10位  
+ 406          //  @param      pointnum    小数位显示长度   最高6位
+ 407          //  @return     void
+ 408          //  @since      v1.0
+ 409          //  Sample usage:           oled_printf_float(0,0,x,2,3);//显示浮点数   整数显示2位   小数显示三位
+ 410          //  @note                   特别注意当发现小数部分显示的值与你写入的值不一样的时候，
+ 411          //                          可能是由于浮点数精度丢失问题导致的，这并不是显示函数的问题，
+ 412          //                          有关问题的详情，请自行百度学习   浮点数精度丢失问题。
+ 413          //                          负数会显示一个 ‘-’号   正数显示一个空格
+ 414          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 415          void oled_printf_float(uint16 x,uint16 y,double dat,uint8 num,uint8 pointnum)
+ 416          {
+ 417   1          uint8   length;
+ 418   1        int8    buff[34];
+ 419   1        int8    start,end,point;
+ 420   1      
+ 421   1        if(6<pointnum)  pointnum = 6;
+ 422   1          if(10<num)      num = 10;
+ 423   1              
+ 424   1          if(0>dat)   length = zf_sprintf( &buff[0],"%f",dat);//负数
+ 425   1          else
+ 426   1          {
+ 427   2              length = zf_sprintf( &buff[1],"%f",dat);
+ 428   2              length++;
+ 429   2          }
+ 430   1          point = length - 7;         //计算小数点位置
+ 431   1          start = point - num - 1;    //计算起始位
+ 432   1          end = point + pointnum + 1; //计算结束位
+ 433   1          while(0>start)//整数位不够  末尾应该填充空格
+ 434   1          {
+ 435   2              buff[end] = ' ';
+ 436   2              end++;
+ 437   2              start++;
+ 438   2          }
+ 439   1          
+ 440   1          if(0>dat)   buff[start] = '-';
+ 441   1          else        buff[start] = ' ';
+ 442   1          
+ 443   1          buff[end] = '\0';
+ 444   1          
+ 445   1          oled_p6x8str(x, y, buff); //显示数字
+ 446   1      }
+ 447          
+ 448          
+ 449          
+ 450          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 451          //  @brief      OLED显示图像
+ 452          //  @param      high      图像高度
+C51 COMPILER V9.60.0.0   SEEKFREE_OLED                                                     12/06/2023 17:38:16 PAGE 9   
+
+ 453          //  @param      width     图像宽度
+ 454          //  @param      *p        图像地址（数组）
+ 455          //  @param      value     二值化阀值
+ 456          //  @return     void
+ 457          //  @since      v1.0
+ 458          //  Sample usage: 
+ 459          //  @Note       使用Image2lcd V3.2软件取模   C语言数组   水平扫描   
+ 460          //              宽度高度自行设置   颜色反转  256色
+ 461          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 462          void oled_dis_bmp(uint16 high, uint16 width, uint8 *p,uint8 value)
+ 463          {
+ 464   1          int16 i,j;
+ 465   1          int16 temp,temp1;
+ 466   1          uint8 dat;
+ 467   1          
+ 468   1          
+ 469   1          temp1 = high%8;
+ 470   1          if(temp1 == 0) temp = high/8;
+ 471   1          else           temp = high/8+1;
+ 472   1      
+ 473   1          for(i=0; i<temp; i++)
+ 474   1          {
+ 475   2              oled_set_pos(0,i);
+ 476   2              for(j=0; j<width; j++)
+ 477   2              {
+ 478   3                  dat = 0;
+ 479   3                  if( i<(temp-1) || !temp1 || temp1>=1)dat |= (*(p+i*8*width+j+width*0) > value? 1: 0)<<0;
+ 480   3                  if( i<(temp-1) || !temp1 || temp1>=2)dat |= (*(p+i*8*width+j+width*1) > value? 1: 0)<<1;
+ 481   3                  if( i<(temp-1) || !temp1 || temp1>=3)dat |= (*(p+i*8*width+j+width*2) > value? 1: 0)<<2;
+ 482   3                  if( i<(temp-1) || !temp1 || temp1>=4)dat |= (*(p+i*8*width+j+width*3) > value? 1: 0)<<3;
+ 483   3                  if( i<(temp-1) || !temp1 || temp1>=5)dat |= (*(p+i*8*width+j+width*4) > value? 1: 0)<<4;
+ 484   3                  if( i<(temp-1) || !temp1 || temp1>=6)dat |= (*(p+i*8*width+j+width*5) > value? 1: 0)<<5;
+ 485   3                  if( i<(temp-1) || !temp1 || temp1>=7)dat |= (*(p+i*8*width+j+width*6) > value? 1: 0)<<6;
+ 486   3                  if( i<(temp-1) || !temp1 || temp1>=8)dat |= (*(p+i*8*width+j+width*7) > value? 1: 0)<<7;
+ 487   3                 
+ 488   3                  oled_wrdat(dat);
+ 489   3              }
+ 490   2          }
+ 491   1      }
+ 492          
+ 493          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 494          //  @brief      汉字显示
+ 495          //  @param      x       横坐标 0-127
+ 496          //  @param      y       纵坐标 0-7
+ 497          //  @param      size    取模的时候设置的汉字字体大小，也就是一个汉字占用的点阵长宽为多少个点，取模的时候需
+             -要长宽是一样的。
+ 498          //  @param      *p      需要显示的汉字数组
+ 499          //  @param      len     需要显示多少位
+ 500          //  @return     void
+ 501          //  @since      v1.0
+ 502          //  Sample usage:   
+ 503          //  @Note       使用PCtoLCD2002软件取模       阴码、逐行式、顺向   16*16
+ 504          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 505          void oled_print_chinese(uint8 x, uint8 y, uint8 size, const uint8 *p, uint8 len)
+ 506          {
+ 507   1          int16 i,j,k;
+ 508   1          
+ 509   1          for(i=0; i<len; i++)
+ 510   1          {
+C51 COMPILER V9.60.0.0   SEEKFREE_OLED                                                     12/06/2023 17:38:16 PAGE 10  
+
+ 511   2              for(j=0; j<(size/8); j++)
+ 512   2              {
+ 513   3                  oled_set_pos(x+i*size,y+j);
+ 514   3                  for(k=0; k<16; k++)
+ 515   3                  {
+ 516   4                      oled_wrdat(*p);
+ 517   4                      p++;
+ 518   4                  }
+ 519   3              }
+ 520   2          }
+ 521   1      }
+ 522          
+ 523          
+ 524          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 525          //  以下函数是使用硬件SPI通信，相比较软件IIC，速度比软件IIC快。
+ 526          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 527          
+ 528          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 529          //  @brief      内部调用，用户无需关心
+ 530          //  @param      void        
+ 531          //  @return             
+ 532          //  @since      v1.0
+ 533          //  Sample usage:               
+ 534          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 535          void oled_wrdat_spi(uint8 dat)
+ 536          {
+ 537   1          OLED_SPI_CS(0); //使能信号端，拉低时正常使用
+ 538   1        OLED_SPI_DC(1);
+ 539   1        spi_mosi(dat);
+ 540   1          OLED_SPI_CS(1); //使能信号端，拉低时正常使用
+ 541   1      
+ 542   1        
+ 543   1      }
+ 544          
+ 545          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 546          //  @brief      内部调用，用户无需关心
+ 547          //  @param      void        
+ 548          //  @return             
+ 549          //  @since      v1.0
+ 550          //  Sample usage:               
+ 551          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 552          //void oled_wr6dat_spi(uint8 dat)
+ 553          //{
+ 554          //  uint8 i=6;
+ 555          //    
+ 556          //  OLED_SPI_CS(0); //使能信号端，拉低时正常使用
+ 557          //  OLED_SPI_DC(1);
+ 558          //  OLED_SCL(0);
+ 559          //  while(i--)
+ 560          //  {
+ 561          //    if(dat&0x80){OLED_SDA(1);}
+ 562          //    else{OLED_SDA(0);}
+ 563          //    OLED_SCL(1);
+ 564          //    OLED_SCL(0);
+ 565          //    dat<<=1;
+ 566          //  }
+C51 COMPILER V9.60.0.0   SEEKFREE_OLED                                                     12/06/2023 17:38:16 PAGE 11  
+
+ 567          //    OLED_SPI_CS(1); //使能信号端，拉低时正常使用
+ 568          //}
+ 569          
+ 570          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 571          //  @brief      内部调用，用户无需关心
+ 572          //  @param      void        
+ 573          //  @return             
+ 574          //  @since      v1.0
+ 575          //  Sample usage:               
+ 576          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 577          void oled_wrcmd_spi(uint8 cmd)
+ 578          {
+ 579   1        OLED_SPI_CS(0); //使能信号端，拉低时正常使用
+ 580   1        OLED_SPI_DC(0);
+ 581   1        spi_mosi(cmd);
+ 582   1          OLED_SPI_CS(1); //使能信号端，拉低时正常使用
+ 583   1      }
+ 584          
+ 585          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 586          //  @brief      内部调用，用户无需关心
+ 587          //  @param      void        
+ 588          //  @return             
+ 589          //  @since      v1.0
+ 590          //  Sample usage:               
+ 591          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 592          void oled_hexascii_spi(uint16 hex,int8 * Print)
+ 593          {
+ 594   1        uint8 hexcheck ;
+ 595   1        uint8 TEMP ;
+ 596   1        TEMP = 6 ;
+ 597   1        Print[TEMP ]='\0';
+ 598   1        while(TEMP)
+ 599   1        {
+ 600   2            TEMP -- ;
+ 601   2            hexcheck  =  hex%10 ;
+ 602   2            hex   /=10 ;
+ 603   2            Print[TEMP ]  = hexcheck + 0x30 ;
+ 604   2        }
+ 605   1        
+ 606   1      }
+ 607          
+ 608          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 609          //  @brief      OLED初始化函数
+ 610          //  @param      NULL
+ 611          //  @return     void
+ 612          //  @since      v1.0
+ 613          //  Sample usage:     
+ 614          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 615          void oled_init_spi(void)
+ 616          {
+ 617   1        
+ 618   1          OLED_SPI_CS(1);
+ 619   1        
+ 620   1          spi_init(OLED_SPI_N, OLED_SPI_SCLK_PIN, OLED_SPI_MOSI_PIN, OLED_SPI_MISO_PIN, 0, MASTER, SPI_SYSclk_DI
+             -V_4);
+ 621   1        
+C51 COMPILER V9.60.0.0   SEEKFREE_OLED                                                     12/06/2023 17:38:16 PAGE 12  
+
+ 622   1        OLED_SPI_RST(0);
+ 623   1        pca_delay_ms(50);
+ 624   1        OLED_SPI_RST(1);
+ 625   1        
+ 626   1        oled_wrcmd_spi(0xae);//--turn off oled panel
+ 627   1        oled_wrcmd_spi(0x00);//---set low column address
+ 628   1        oled_wrcmd_spi(0x10);//---set high column address
+ 629   1        oled_wrcmd_spi(0x40);//--set start line address  Set Mapping RAM Display Start Line (0x00~0x3F)
+ 630   1        oled_wrcmd_spi(0x81);//--set contrast control register
+ 631   1        oled_wrcmd_spi(Brightness); // Set SEG Output Current Brightness
+ 632   1          
+ 633   1      #if (0 == OLED_DISPLAY_DIR)
+ 634   1        oled_wrcmd_spi(0xa1);//--Set SEG/Column Mapping     0xa0左右反置 0xa1正常
+ 635   1        oled_wrcmd_spi(0xc8);//Set COM/Row Scan Direction   0xc0上下反置 0xc8正常
+ 636   1      #else
+                  oled_wrcmd_spi(0xa0);//--Set SEG/Column Mapping     0xa0左右反置 0xa1正常
+                oled_wrcmd_spi(0xc0);//Set COM/Row Scan Direction   0xc0上下反置 0xc8正常
+              #endif
+ 640   1          
+ 641   1        oled_wrcmd_spi(0xa6);//--set normal display
+ 642   1        oled_wrcmd_spi(0xa8);//--set multiplex ratio(1 to 64)
+ 643   1        oled_wrcmd_spi(0x3f);//--1/64 duty
+ 644   1        oled_wrcmd_spi(0xd3);//-set display offset  Shift Mapping RAM Counter (0x00~0x3F)
+ 645   1        oled_wrcmd_spi(0x00);//-not offset
+ 646   1        oled_wrcmd_spi(0xd5);//--set display clock divide ratio/oscillator frequency
+ 647   1        oled_wrcmd_spi(0x80);//--set divide ratio, Set Clock as 100 Frames/Sec
+ 648   1        oled_wrcmd_spi(0xd9);//--set pre-charge period
+ 649   1        oled_wrcmd_spi(0xf1);//Set Pre-Charge as 15 Clocks & Discharge as 1 Clock
+ 650   1        oled_wrcmd_spi(0xda);//--set com pins hardware configuration
+ 651   1        oled_wrcmd_spi(0x12);
+ 652   1        oled_wrcmd_spi(0xdb);//--set vcomh
+ 653   1        oled_wrcmd_spi(0x40);//Set VCOM Deselect Level
+ 654   1        oled_wrcmd_spi(0x20);//-Set Page Addressing Mode (0x00/0x01/0x02)
+ 655   1        oled_wrcmd_spi(0x02);//
+ 656   1        oled_wrcmd_spi(0x8d);//--set Charge Pump enable/disable
+ 657   1        oled_wrcmd_spi(0x14);//--set(0x10) disable
+ 658   1        oled_wrcmd_spi(0xa4);// Disable Entire Display On (0xa4/0xa5)
+ 659   1        oled_wrcmd_spi(0xa6);// Disable Inverse Display On (0xa6/a7)
+ 660   1        oled_wrcmd_spi(0xaf);//--turn on oled panel
+ 661   1        oled_fill_spi(0x00);  //初始清屏
+ 662   1        oled_set_pos_spi(0,0);
+ 663   1      }
+ 664          
+ 665          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 666          //  @brief      OLED显示坐标设置
+ 667          //  @param      x     x轴坐标设置0-127
+ 668          //  @param      y           y轴坐标设置0-7
+ 669          //  @return     void
+ 670          //  @since      v1.0
+ 671          //  Sample usage:     
+ 672          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 673          void oled_set_pos_spi(uint8 x, uint8 y)
+ 674          {
+ 675   1      
+ 676   1          
+ 677   1          oled_wrcmd_spi(0xb0+y);
+ 678   1          oled_wrcmd_spi(((x&0xf0)>>4)|0x10);
+ 679   1          oled_wrcmd_spi((x&0x0f)|0x00);
+ 680   1      }
+ 681          
+C51 COMPILER V9.60.0.0   SEEKFREE_OLED                                                     12/06/2023 17:38:16 PAGE 13  
+
+ 682          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 683          //  @brief      OLED清屏函数
+ 684          //  @param      bmp_data  填充颜色选着(0x00 or 0xff)
+ 685          //  @return     void
+ 686          //  @since      v1.0
+ 687          //  Sample usage:     
+ 688          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 689          void oled_fill_spi(uint8 bmp_data)
+ 690          {
+ 691   1        uint8 y,x;
+ 692   1        
+ 693   1        for(y=0;y<8;y++)
+ 694   1        {
+ 695   2          oled_wrcmd_spi(0xb0+y);
+ 696   2          oled_wrcmd_spi(0x01);
+ 697   2          oled_wrcmd_spi(0x10);
+ 698   2          for(x=0;x<X_WIDTH;x++)  oled_wrdat_spi(bmp_data); 
+ 699   2        }
+ 700   1      }
+ 701          
+ 702          
+ 703          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 704          //  @brief      OLED控制一个坐标下8个像素的点亮与熄灭
+ 705          //  @param      x     x轴坐标设置0-127
+ 706          //  @param      y           y轴坐标设置0-7
+ 707          //  @return     void
+ 708          //  @since      v1.0
+ 709          //  Sample usage:     oled_putpixel(0,0,0xff);//将0,0坐标 8个点全部点亮
+ 710          //  Sample usage:     oled_putpixel(0,0,0x01);//将0,0坐标 最低位点亮其余7个熄灭
+ 711          //  @note                   同理可以任意控制一个坐标下8个像素的点亮与熄灭
+ 712          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 713          void oled_putpixel_spi(uint8 x,uint8 y,uint8 data1)
+ 714          {
+ 715   1        oled_set_pos_spi(x,y);
+ 716   1          oled_wrcmd_spi(0xb0+y);
+ 717   1        oled_wrcmd_spi(((x&0xf0)>>4)|0x10);
+ 718   1        oled_wrcmd_spi((x&0x0f)|0x00);
+ 719   1        oled_wrdat_spi(data1);
+ 720   1      }
+ 721          
+ 722          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 723          //  @brief      OLED关闭一个坐标所有亮点
+ 724          //  @param      x     x轴坐标设置0-127
+ 725          //  @param      y           y轴坐标设置0-7
+ 726          //  @return     void
+ 727          //  @since      v1.0
+ 728          //  Sample usage:     
+ 729          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 730          void oled_clrpixel_spi(uint8 x,uint8 y)
+ 731          {
+ 732   1        oled_set_pos_spi(x,y);
+ 733   1          oled_wrcmd_spi(0xb0+y);
+ 734   1        oled_wrcmd_spi(((x&0xf0)>>4)|0x10);
+ 735   1        oled_wrcmd_spi((x&0x0f)|0x00);
+ 736   1        oled_wrdat_spi(0x00);
+ 737   1      }
+C51 COMPILER V9.60.0.0   SEEKFREE_OLED                                                     12/06/2023 17:38:16 PAGE 14  
+
+ 738          
+ 739          
+ 740          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 741          //  @brief      OLED显示字符串(6*8字体)
+ 742          //  @param      x     x轴坐标设置0-127
+ 743          //  @param      y           y轴坐标设置0-7
+ 744          //  @param      ch[]        字符串
+ 745          //  @return     void
+ 746          //  @since      v1.0
+ 747          //  Sample usage:     
+ 748          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 749          void oled_p6x8str_spi(uint8 x,uint8 y,const int8 ch[])
+ 750          {
+ 751   1        uint8 c=0,i=0,j=0;
+ 752   1        while (ch[j]!='\0')
+ 753   1        {
+ 754   2            c =ch[j]-32;
+ 755   2            if(x>126){x=0;y++;}
+ 756   2            oled_set_pos_spi(x,y);
+ 757   2            for(i=0;i<6;i++)  oled_wrdat_spi(oled_6x8[c][i]);
+ 758   2            x+=6;
+ 759   2            j++;
+ 760   2        }
+ 761   1      }
+ 762          
+ 763          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 764          //  @brief      OLED显示字符串(8*16字体)
+ 765          //  @param      x     x轴坐标设置0-127
+ 766          //  @param      y           y轴坐标设置0-7
+ 767          //  @param      ch[]        字符串
+ 768          //  @return     void
+ 769          //  @since      v1.0
+ 770          //  Sample usage:     务必注意，本函数字符列高位16，因此y应该是每次递增2
+ 771          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 772          void oled_p8x16str_spi(uint8 x,uint8 y,const int8 ch[])
+ 773          {
+ 774   1        uint8 c=0,i=0,j=0;
+ 775   1        
+ 776   1        while (ch[j]!='\0')
+ 777   1        {
+ 778   2            c =ch[j]-32;
+ 779   2            if(x>120){x=0;y++;}
+ 780   2          
+ 781   2            oled_set_pos_spi(x,y);
+ 782   2            for(i=0;i<8;i++)  oled_wrdat_spi(oled_8x16[c*16+i]);
+ 783   2              
+ 784   2            oled_set_pos_spi(x,y+1);
+ 785   2            for(i=0;i<8;i++)  oled_wrdat_spi(oled_8x16[c*16+i+8]);
+ 786   2              
+ 787   2            x+=8;
+ 788   2            j++;
+ 789   2        }
+ 790   1      }
+ 791          
+ 792          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 793          //  @brief      OLED显示无符号数(6*8字体)
+ 794          //  @param      x     x轴坐标设置0-127
+C51 COMPILER V9.60.0.0   SEEKFREE_OLED                                                     12/06/2023 17:38:16 PAGE 15  
+
+ 795          //  @param      y           y轴坐标设置0-7
+ 796          //  @param      num         无符号数
+ 797          //  @return     void
+ 798          //  @since      v1.0
+ 799          //  Sample usage:     
+ 800          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 801          void oled_uint16_spi(uint8 x, uint8 y, uint16 num)
+ 802          {
+ 803   1        int8 ch[7];
+ 804   1        
+ 805   1        oled_hexascii_spi(num,ch);
+ 806   1          
+ 807   1          oled_p6x8str_spi(x, y, &ch[1]);     //显示数字  6*8字体
+ 808   1          //oled_p8x16str(x, y, &ch[1]);  //显示数字  8*16字体
+ 809   1      }
+ 810          
+ 811          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 812          //  @brief      OLED显示有符号数(6*8字体)
+ 813          //  @param      x     x轴坐标设置0-127
+ 814          //  @param      y           y轴坐标设置0-7
+ 815          //  @param      num         有符号数
+ 816          //  @return     void
+ 817          //  @since      v1.0
+ 818          //  Sample usage:     
+ 819          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 820          void oled_int16_spi(uint8 x, uint8 y, int16 num)
+ 821          {
+ 822   1        int8 ch[7];
+ 823   1        if(num<0)   {num = -num;oled_p6x8str_spi(x, y, "-");}
+ 824   1        else         oled_p6x8str_spi(x, y, " ");
+ 825   1        x+=6;       
+ 826   1          
+ 827   1        oled_hexascii_spi(num,ch);
+ 828   1          oled_p6x8str_spi(x, y, &ch[1]);     //显示数字  6*8字体
+ 829   1      }
+ 830          
+ 831          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 832          //  @brief      OLED显示32位有符号(去除整数部分无效的0)
+ 833          //  @param      x     x轴坐标设置0-127
+ 834          //  @param      y           y轴坐标设置0-7
+ 835          //  @param      dat         需要显示的变量，数据类型uint32
+ 836          //  @param      num         需要显示的位数 最高10位  不包含正负号
+ 837          //  @return     void
+ 838          //  @since      v1.0
+ 839          //  Sample usage:           oled_printf_int32(0,0,x,5);//x可以为int32 uint16 int16 uint8 int8类型
+ 840          //  Sample usage:           负数会显示一个 ‘-’号   正数显示一个空格
+ 841          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 842          void oled_printf_int32_spi(uint16 x,uint16 y,int32 dat,uint8 num)
+ 843          {
+ 844   1          int8    buff[34];
+ 845   1          uint8   length;
+ 846   1          
+ 847   1          if(10<num)      num = 10;
+ 848   1          
+ 849   1          num++;
+ 850   1          if(0>dat)   length = zf_sprintf( &buff[0],"%d",dat);//负数
+ 851   1          else
+C51 COMPILER V9.60.0.0   SEEKFREE_OLED                                                     12/06/2023 17:38:16 PAGE 16  
+
+ 852   1          {
+ 853   2              buff[0] = ' ';
+ 854   2              length = zf_sprintf( &buff[1],"%d",dat);
+ 855   2              length++;
+ 856   2          }
+ 857   1          while(length < num)
+ 858   1          {
+ 859   2              buff[length] = ' ';
+ 860   2              length++;
+ 861   2          }
+ 862   1          buff[num] = '\0';
+ 863   1          
+ 864   1          oled_p6x8str_spi(x, y, buff); //显示数字
+ 865   1      }
+ 866          
+ 867          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 868          //  @brief      OLED显示浮点数(去除整数部分无效的0)
+ 869          //  @param      x     x轴坐标设置0-127
+ 870          //  @param      y           y轴坐标设置0-7
+ 871          //  @param      dat         需要显示的变量，数据类型float或double
+ 872          //  @param      num         整数位显示长度   最高10位  
+ 873          //  @param      pointnum    小数位显示长度   最高6位
+ 874          //  @return     void
+ 875          //  @since      v1.0
+ 876          //  Sample usage:           oled_printf_float(0,0,x,2,3);//显示浮点数   整数显示2位   小数显示三位
+ 877          //  @note                   特别注意当发现小数部分显示的值与你写入的值不一样的时候，
+ 878          //                          可能是由于浮点数精度丢失问题导致的，这并不是显示函数的问题，
+ 879          //                          有关问题的详情，请自行百度学习   浮点数精度丢失问题。
+ 880          //                          负数会显示一个 ‘-’号   正数显示一个空格
+ 881          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 882          void oled_printf_float_spi(uint16 x,uint16 y,double dat,uint8 num,uint8 pointnum)
+ 883          {
+ 884   1          uint8   length;
+ 885   1        int8    buff[34];
+ 886   1        int8    start,end,point;
+ 887   1      
+ 888   1        if(6<pointnum)  pointnum = 6;
+ 889   1          if(10<num)      num = 10;
+ 890   1              
+ 891   1          if(0>dat)   length = zf_sprintf( &buff[0],"%f",dat);//负数
+ 892   1          else
+ 893   1          {
+ 894   2              length = zf_sprintf( &buff[1],"%f",dat);
+ 895   2              length++;
+ 896   2          }
+ 897   1          point = length - 7;         //计算小数点位置
+ 898   1          start = point - num - 1;    //计算起始位
+ 899   1          end = point + pointnum + 1; //计算结束位
+ 900   1          while(0>start)//整数位不够  末尾应该填充空格
+ 901   1          {
+ 902   2              buff[end] = ' ';
+ 903   2              end++;
+ 904   2              start++;
+ 905   2          }
+ 906   1          
+ 907   1          if(0>dat)   buff[start] = '-';
+ 908   1          else        buff[start] = ' ';
+ 909   1          
+ 910   1          buff[end] = '\0';
+ 911   1          
+C51 COMPILER V9.60.0.0   SEEKFREE_OLED                                                     12/06/2023 17:38:16 PAGE 17  
+
+ 912   1          oled_p6x8str_spi(x, y, buff); //显示数字
+ 913   1      }
+ 914          
+ 915          
+ 916          
+ 917          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 918          //  @brief      OLED显示图像
+ 919          //  @param      high      图像高度
+ 920          //  @param      width     图像宽度
+ 921          //  @param      *p        图像地址（数组）
+ 922          //  @param      value     二值化阀值
+ 923          //  @return     void
+ 924          //  @since      v1.0
+ 925          //  Sample usage: 
+ 926          //  @Note       使用Image2lcd V3.2软件取模   C语言数组   水平扫描   
+ 927          //              宽度高度自行设置   颜色反转  256色
+ 928          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 929          void oled_dis_bmp_spi(uint16 high, uint16 width, uint8 *p,uint8 value)
+ 930          {
+ 931   1          int16 i,j;
+ 932   1          int16 temp,temp1;
+ 933   1          uint8 dat;
+ 934   1          
+ 935   1          
+ 936   1          temp1 = high%8;
+ 937   1          if(temp1 == 0) temp = high/8;
+ 938   1          else           temp = high/8+1;
+ 939   1      
+ 940   1          for(i=0; i<temp; i++)
+ 941   1          {
+ 942   2              oled_set_pos_spi(0,i);
+ 943   2              for(j=0; j<width; j++)
+ 944   2              {
+ 945   3                  dat = 0;
+ 946   3                  if( i<(temp-1) || !temp1 || temp1>=1)dat |= (*(p+i*8*width+j+width*0) > value? 1: 0)<<0;
+ 947   3                  if( i<(temp-1) || !temp1 || temp1>=2)dat |= (*(p+i*8*width+j+width*1) > value? 1: 0)<<1;
+ 948   3                  if( i<(temp-1) || !temp1 || temp1>=3)dat |= (*(p+i*8*width+j+width*2) > value? 1: 0)<<2;
+ 949   3                  if( i<(temp-1) || !temp1 || temp1>=4)dat |= (*(p+i*8*width+j+width*3) > value? 1: 0)<<3;
+ 950   3                  if( i<(temp-1) || !temp1 || temp1>=5)dat |= (*(p+i*8*width+j+width*4) > value? 1: 0)<<4;
+ 951   3                  if( i<(temp-1) || !temp1 || temp1>=6)dat |= (*(p+i*8*width+j+width*5) > value? 1: 0)<<5;
+ 952   3                  if( i<(temp-1) || !temp1 || temp1>=7)dat |= (*(p+i*8*width+j+width*6) > value? 1: 0)<<6;
+ 953   3                  if( i<(temp-1) || !temp1 || temp1>=8)dat |= (*(p+i*8*width+j+width*7) > value? 1: 0)<<7;
+ 954   3                 
+ 955   3                  oled_wrdat_spi(dat);
+ 956   3              }
+ 957   2          }
+ 958   1      }
+ 959          
+ 960          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 961          //  @brief      汉字显示
+ 962          //  @param      x       横坐标 0-127
+ 963          //  @param      y       纵坐标 0-7
+ 964          //  @param      size    取模的时候设置的汉字字体大小，也就是一个汉字占用的点阵长宽为多少个点，取模的时候需
+             -要长宽是一样的。
+ 965          //  @param      *p      需要显示的汉字数组
+ 966          //  @param      len     需要显示多少位
+ 967          //  @return     void
+ 968          //  @since      v1.0
+ 969          //  Sample usage:   
+C51 COMPILER V9.60.0.0   SEEKFREE_OLED                                                     12/06/2023 17:38:16 PAGE 18  
+
+ 970          //  @Note       使用PCtoLCD2002软件取模       阴码、逐行式、顺向   16*16
+ 971          //--------------------------------------------------------------------------------------------------------
+             ------------
+ 972          void oled_print_chinese_spi(uint8 x, uint8 y, uint8 size, const uint8 *p, uint8 len)
+ 973          {
+ 974   1          int16 i,j,k;
+ 975   1          
+ 976   1          for(i=0; i<len; i++)
+ 977   1          {
+ 978   2              for(j=0; j<(size/8); j++)
+ 979   2              {
+ 980   3                  oled_set_pos_spi(x+i*size,y+j);
+ 981   3                  for(k=0; k<16; k++)
+ 982   3                  {
+ 983   4                      oled_wrdat_spi(*p);
+ 984   4                      p++;
+ 985   4                  }
+ 986   3              }
+ 987   2          }
+ 988   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   6643    ----
+   CONSTANT SIZE    =     10    ----
+   XDATA SIZE       =   ----     335
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

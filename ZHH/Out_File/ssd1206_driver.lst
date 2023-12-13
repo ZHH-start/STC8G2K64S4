@@ -1,0 +1,29 @@
+C51 COMPILER V9.60.0.0   SSD1206_DRIVER                                                    12/06/2023 20:19:47 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE SSD1206_DRIVER
+OBJECT MODULE PLACED IN .\Out_File\ssd1206_driver.obj
+COMPILER INVOKED BY: C:\Keil_v5_C51\C51\BIN\C51.EXE ..\Libraries\seekfree_peripheral\ssd1206_driver.c LARGE OMF2 OPTIMIZ
+                    -E(8,SPEED) BROWSE INCDIR(..\Libraries\libraries;..\Libraries\seekfree_libraries;..\Libraries\seekfree_peripheral;\USER;.
+                    -.\CODE) DEBUG PRINT(.\Out_File\ssd1206_driver.lst) TABS(2) OBJECT(.\Out_File\ssd1206_driver.obj)
+
+line level    source
+
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   ----    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

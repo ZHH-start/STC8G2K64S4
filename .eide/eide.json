@@ -1,0 +1,278 @@
+{
+  "name": "SEEKFREE",
+  "type": "C51",
+  "dependenceList": [],
+  "srcDirs": [],
+  "virtualFolder": {
+    "name": "<virtual_root>",
+    "files": [],
+    "folders": [
+      {
+        "name": "seekfree_libraries",
+        "files": [
+          {
+            "path": "Libraries/seekfree_libraries/zf_adc.c"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_adc.h"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_delay.c"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_delay.h"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_eeprom.c"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_eeprom.h"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_exti.c"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_exti.h"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_gpio.c"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_gpio.h"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_iic.c"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_iic.h"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_mdu16.c"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_mdu16.h"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_nvic.c"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_nvic.h"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_pca_delay.c"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_pca_delay.h"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_pca_pit.c"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_pca_pit.h"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_pwm.c"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_pwm.h"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_spi.c"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_spi.h"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_tim.c"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_tim.h"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_uart.c"
+          },
+          {
+            "path": "Libraries/seekfree_libraries/zf_uart.h"
+          }
+        ],
+        "folders": []
+      },
+      {
+        "name": "seekfree_peripheral",
+        "files": [
+          {
+            "path": "Libraries/seekfree_peripheral/drive_5x4keyboard.c"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/drive_5x4keyboard.h"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/drive_DHT.c"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/drive_DHT.h"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/drive_oled.c"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/drive_oled.h"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/drive_Ringtones.c"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/drive_Ringtones.h"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/headfile.h"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/SEEKFREE_18TFT.c"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/SEEKFREE_18TFT.h"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/SEEKFREE_ABSOLUTE_ENCODER.c"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/SEEKFREE_ABSOLUTE_ENCODER.h"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/SEEKFREE_FONT.c"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/SEEKFREE_FONT.h"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/SEEKFREE_ICM20602.c"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/SEEKFREE_ICM20602.h"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/SEEKFREE_IIC.c"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/SEEKFREE_IIC.h"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/SEEKFREE_IPS114_SPI.c"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/SEEKFREE_IPS114_SPI.h"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/SEEKFREE_MPU6050.c"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/SEEKFREE_MPU6050.h"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/SEEKFREE_TSL1401.c"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/SEEKFREE_TSL1401.h"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/SEEKFREE_VIRSCO.c"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/SEEKFREE_VIRSCO.h"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/SEEKFREE_WIRELESS.c"
+          },
+          {
+            "path": "Libraries/seekfree_peripheral/SEEKFREE_WIRELESS.h"
+          }
+        ],
+        "folders": []
+      },
+      {
+        "name": "startup",
+        "files": [
+          {
+            "path": "Libraries/libraries/board.c"
+          },
+          {
+            "path": "Libraries/libraries/board.h"
+          },
+          {
+            "path": "Libraries/libraries/common.c"
+          },
+          {
+            "path": "Libraries/libraries/common.h"
+          },
+          {
+            "path": "Libraries/libraries/SEEKFREE_PRINTF.c"
+          },
+          {
+            "path": "Libraries/libraries/SEEKFREE_PRINTF.h"
+          },
+          {
+            "path": "Libraries/libraries/STARTUP.A51"
+          },
+          {
+            "path": "Libraries/libraries/STC8Gxx.h"
+          }
+        ],
+        "folders": []
+      },
+      {
+        "name": "user",
+        "files": [
+          {
+            "path": "ZHH/USER/isr.c"
+          },
+          {
+            "path": "ZHH/USER/isr.h"
+          },
+          {
+            "path": "ZHH/USER/main.c"
+          }
+        ],
+        "folders": []
+      }
+    ]
+  },
+  "outDir": "build",
+  "deviceName": null,
+  "packDir": null,
+  "miscInfo": {
+    "uid": "25fe1bbd3d249507ea240bab927d3465"
+  },
+  "targets": {
+    "STC8G2K64S4": {
+      "excludeList": [],
+      "toolchain": "Keil_C51",
+      "compileConfig": {
+        "options": "null"
+      },
+      "uploader": "Custom",
+      "uploadConfig": {
+        "bin": "",
+        "commandLine": "",
+        "eraseChipCommand": ""
+      },
+      "uploadConfigMap": {},
+      "custom_dep": {
+        "name": "default",
+        "incList": [
+          "../../Keil_v5_C51/C51/INC/STC",
+          "Libraries/libraries",
+          "Libraries/seekfree_libraries",
+          "Libraries/seekfree_peripheral",
+          "../../USER",
+          "CODE",
+          "ZHH/USER"
+        ],
+        "libList": [],
+        "sourceDirList": [],
+        "defineList": []
+      }
+    }
+  },
+  "version": "3.3"
+}

@@ -1,0 +1,1 @@
+"USER\isr.c" LARGE OMF2 OPTIMIZE (8,SPEED) BROWSE INCDIR(..\Libraries\libraries;..\Libraries\seekfree_libraries;..\Libraries\seekfree_peripheral;..\user;..\CODE) DEBUG PRINT(.\Out_File\isr.lst) TABS (2) OBJECT(.\Out_File\isr.obj)

@@ -1,0 +1,421 @@
+C51 COMPILER V9.60.0.0   ATK_MW8266D                                                       12/08/2023 20:31:23 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE ATK_MW8266D
+OBJECT MODULE PLACED IN .\Out_File\atk_mw8266d.obj
+COMPILER INVOKED BY: C:\Keil_v5_C51\C51\BIN\C51.EXE ..\Libraries\seekfree_peripheral\atk_mw8266d.c LARGE OMF2 OPTIMIZE(8
+                    -,SPEED) BROWSE INCDIR(..\Libraries\libraries;..\Libraries\seekfree_libraries;..\Libraries\seekfree_peripheral;..\USER;..
+                    -\CODE) DEBUG PRINT(.\Out_File\atk_mw8266d.lst) TABS(2) OBJECT(.\Out_File\atk_mw8266d.obj)
+
+line level    source
+
+   1          /**
+   2           ****************************************************************************************************
+   3           * @file        atk_mw8266d.c
+   4           * @author      正点原子团队(ALIENTEK)
+   5           * @version     V1.0
+   6           * @date        2022-06-21
+   7           * @brief       ATK-MW8266D模块驱动代码
+   8           * @license     Copyright (c) 2020-2032, 广州市星翼电子科技有限公司
+   9           ****************************************************************************************************
+  10           * @attention
+  11           *
+  12           * 实验平台:正点原子 探索者 F407开发板
+  13           * 在线视频:www.yuanzige.com
+  14           * 技术论坛:www.openedv.com
+  15           * 公司网址:www.alientek.com
+  16           * 购买地址:openedv.taobao.com
+  17           *
+  18           ****************************************************************************************************
+  19           */
+  20          
+  21          #include "atk_mw8266d.h"
+  22          #include "zf_delay.h"
+*** WARNING C318 IN LINE 35 OF ..\Libraries\seekfree_peripheral\headfile.h: can't open file 'isr.h'
+  23          #include "zf_gpio.h"
+  24          #include "common.h"
+  25          #include <string.h>
+  26          #include <stdio.h>
+  27          
+  28          /**
+  29           * @brief       ATK-MW8266D硬件初始化
+  30           * @param       无
+  31           * @retval      无
+  32           */
+  33          // static void atk_mw8266d_hw_init(void)
+  34          // {
+  35          //     GPIO_InitTypeDef gpio_init_struct;
+  36          
+  37          //     ATK_MW8266D_RST_GPIO_CLK_ENABLE();
+  38          
+  39          //     gpio_init_struct.Pin = ATK_MW8266D_RST_GPIO_PIN;
+  40          //     gpio_init_struct.Mode = GPIO_MODE_OUTPUT_PP;
+  41          //     gpio_init_struct.Pull = GPIO_NOPULL;
+  42          //     gpio_init_struct.Speed = GPIO_SPEED_FREQ_HIGH;
+  43          //     HAL_GPIO_Init(ATK_MW8266D_RST_GPIO_PORT, &gpio_init_struct);
+  44          // }
+  45          static void atk_mw8266d_hw_init(void)
+  46          {
+  47   1          gpio_mode(P3_0, GPIO);
+  48   1          gpio_pull_set(P3_0, NOPULL);
+  49   1      }
+  50          
+  51          /**
+  52           * @brief       ATK-MW8266D硬件复位
+C51 COMPILER V9.60.0.0   ATK_MW8266D                                                       12/08/2023 20:31:23 PAGE 2   
+
+  53           * @param       无
+  54           * @retval      无
+  55           */
+  56          void atk_mw8266d_hw_reset(void)
+  57          {
+  58   1          // ATK_MW8266D_RST(0);
+  59   1          P30=0;
+  60   1          delay_ms(100);
+  61   1          // ATK_MW8266D_RST(1);
+  62   1          P30=1;
+  63   1          delay_ms(500);
+  64   1      }
+  65          
+  66          /**
+  67           * @brief       ATK-MW8266D发送AT指令
+  68           * @param       cmd    : 待发送的AT指令
+  69           *              ack    : 等待的响应
+  70           *              timeout: 等待超时时间
+  71           * @retval      ATK_MW8266D_EOK     : 函数执行成功
+  72           *              ATK_MW8266D_ETIMEOUT: 等待期望应答超时，函数执行失败
+  73           */
+  74          uint8 atk_mw8266d_send_at_cmd(char *cmd, char *ack, unsigned int timeout)
+  75          {
+  76   1          unsigned char *ret = NULL;
+  77   1      
+  78   1          atk_mw8266d_uart_rx_restart();
+  79   1          atk_mw8266d_uart_printf("%s\r\n", cmd);
+  80   1      
+  81   1          if ((ack == NULL) || (timeout == 0)) {
+  82   2              return ATK_MW8266D_EOK;
+  83   2          } else {
+  84   2              while (timeout > 0) {
+  85   3                  ret = atk_mw8266d_uart_rx_get_frame();
+  86   3                  if (ret != NULL) {
+  87   4                      if (strstr((const char *)ret, ack) != NULL) {
+  88   5                          return ATK_MW8266D_EOK;
+  89   5                      } else {
+  90   5                          atk_mw8266d_uart_rx_restart();
+  91   5                      }
+  92   4                  }
+  93   3                  timeout--;
+  94   3                  delay_ms(1);
+  95   3              }
+  96   2              return ATK_MW8266D_ETIMEOUT;
+  97   2          }
+  98   1      }
+  99          
+ 100          /**
+ 101           * @brief       ATK-MW8266D初始化
+ 102           * @param       baudrate: ATK-MW8266D UART通讯波特率
+ 103           * @retval      ATK_MW8266D_EOK  : ATK-MW8266D初始化成功，函数执行成功
+ 104           *              ATK_MW8266D_ERROR: ATK-MW8266D初始化失败，函数执行失败
+ 105           */
+ 106          uint8 atk_mw8266d_init(unsigned int baudrate)
+ 107          {
+ 108   1          atk_mw8266d_hw_init();                        /* ATK-MW8266D硬件初始化 */
+ 109   1          atk_mw8266d_hw_reset();                       /* ATK-MW8266D硬件复位 */
+ 110   1          atk_mw8266d_uart_init(baudrate);              /* ATK-MW8266D UART初始化 */
+ 111   1          if (atk_mw8266d_at_test() != ATK_MW8266D_EOK) /* ATK-MW8266D AT指令测试 */
+ 112   1          {
+ 113   2              return ATK_MW8266D_ERROR;
+ 114   2          }
+C51 COMPILER V9.60.0.0   ATK_MW8266D                                                       12/08/2023 20:31:23 PAGE 3   
+
+ 115   1      
+ 116   1          return ATK_MW8266D_EOK;
+ 117   1      }
+ 118          
+ 119          /**
+ 120           * @brief       ATK-MW8266D恢复出厂设置
+ 121           * @param       无
+ 122           * @retval      ATK_MW8266D_EOK  : 恢复出场设置成功
+ 123           *              ATK_MW8266D_ERROR: 恢复出场设置失败
+ 124           */
+ 125          unsigned char atk_mw8266d_restore(void)
+ 126          {
+ 127   1          unsigned char ret;
+ 128   1      
+ 129   1          ret = atk_mw8266d_send_at_cmd("AT+RESTORE", "ready", 3000);
+ 130   1          if (ret == ATK_MW8266D_EOK) {
+ 131   2              return ATK_MW8266D_EOK;
+ 132   2          } else {
+ 133   2              return ATK_MW8266D_ERROR;
+ 134   2          }
+ 135   1      }
+ 136          
+ 137          /**
+ 138           * @brief       ATK-MW8266D AT指令测试
+ 139           * @param       无
+ 140           * @retval      ATK_MW8266D_EOK  : AT指令测试成功
+ 141           *              ATK_MW8266D_ERROR: AT指令测试失败
+ 142           */
+ 143          unsigned char atk_mw8266d_at_test(void)
+ 144          {
+ 145   1          unsigned char ret;
+ 146   1          unsigned char i;
+ 147   1      
+ 148   1          for (i = 0; i < 10; i++) {
+ 149   2              ret = atk_mw8266d_send_at_cmd("AT", "OK", 500);
+ 150   2              if (ret == ATK_MW8266D_EOK) {
+ 151   3                  return ATK_MW8266D_EOK;
+ 152   3              }
+ 153   2          }
+ 154   1      
+ 155   1          return ATK_MW8266D_ERROR;
+ 156   1      }
+ 157          
+ 158          /**
+ 159           * @brief       设置ATK-MW8266D工作模式
+ 160           * @param       mode: 1，Station模式
+ 161           *                    2，AP模式
+ 162           *                    3，AP+Station模式
+ 163           * @retval      ATK_MW8266D_EOK   : 工作模式设置成功
+ 164           *              ATK_MW8266D_ERROR : 工作模式设置失败
+ 165           *              ATK_MW8266D_EINVAL: mode参数错误，工作模式设置失败
+ 166           */
+ 167          uint8 atk_mw8266d_set_mode(uint8 mode)
+ 168          {
+ 169   1          uint8 ret;
+ 170   1      
+ 171   1          switch (mode) {
+ 172   2              case 1: {
+ 173   3                  ret = atk_mw8266d_send_at_cmd("AT+CWMODE=1", "OK", 500); /* Station模式 */
+ 174   3                  break;
+ 175   3              }
+ 176   2              case 2: {
+C51 COMPILER V9.60.0.0   ATK_MW8266D                                                       12/08/2023 20:31:23 PAGE 4   
+
+ 177   3                  ret = atk_mw8266d_send_at_cmd("AT+CWMODE=2", "OK", 500); /* AP模式 */
+ 178   3                  break;
+ 179   3              }
+ 180   2              case 3: {
+ 181   3                  ret = atk_mw8266d_send_at_cmd("AT+CWMODE=3", "OK", 500); /* AP+Station模式 */
+ 182   3                  break;
+ 183   3              }
+ 184   2              default: {
+ 185   3                  return ATK_MW8266D_EINVAL;
+ 186   3              }
+ 187   2          }
+ 188   1      
+ 189   1          if (ret == ATK_MW8266D_EOK) {
+ 190   2              return ATK_MW8266D_EOK;
+ 191   2          } else {
+ 192   2              return ATK_MW8266D_ERROR;
+ 193   2          }
+ 194   1      }
+ 195          
+ 196          /**
+ 197           * @brief       ATK-MW8266D软件复位
+ 198           * @param       无
+ 199           * @retval      ATK_MW8266D_EOK  : 软件复位成功
+ 200           *              ATK_MW8266D_ERROR: 软件复位失败
+ 201           */
+ 202          unsigned char atk_mw8266d_sw_reset(void)
+ 203          {
+ 204   1          unsigned char ret;
+ 205   1      
+ 206   1          ret = atk_mw8266d_send_at_cmd("AT+RST", "OK", 500);
+ 207   1          if (ret == ATK_MW8266D_EOK) {
+ 208   2              return ATK_MW8266D_EOK;
+ 209   2          } else {
+ 210   2              return ATK_MW8266D_ERROR;
+ 211   2          }
+ 212   1      }
+ 213          
+ 214          /**
+ 215           * @brief       ATK-MW8266D设置回显模式
+ 216           * @param       cfg: 0，关闭回显
+ 217           *                   1，打开回显
+ 218           * @retval      ATK_MW8266D_EOK  : 设置回显模式成功
+ 219           *              ATK_MW8266D_ERROR: 设置回显模式失败
+ 220           */
+ 221          uint8 atk_mw8266d_ate_config(uint8 cfg)
+ 222          {
+ 223   1          uint8 ret;
+ 224   1      
+ 225   1          switch (cfg) {
+ 226   2              case 0: {
+ 227   3                  ret = atk_mw8266d_send_at_cmd("ATE0", "OK", 500); /* 关闭回显 */
+ 228   3                  break;
+ 229   3              }
+ 230   2              case 1: {
+ 231   3                  ret = atk_mw8266d_send_at_cmd("ATE1", "OK", 500); /* 打开回显 */
+ 232   3                  break;
+ 233   3              }
+ 234   2              default: {
+ 235   3                  return ATK_MW8266D_EINVAL;
+ 236   3              }
+ 237   2          }
+ 238   1      
+C51 COMPILER V9.60.0.0   ATK_MW8266D                                                       12/08/2023 20:31:23 PAGE 5   
+
+ 239   1          if (ret == ATK_MW8266D_EOK) {
+ 240   2              return ATK_MW8266D_EOK;
+ 241   2          } else {
+ 242   2              return ATK_MW8266D_ERROR;
+ 243   2          }
+ 244   1      }
+ 245          
+ 246          /**
+ 247           * @brief       ATK-MW8266D连接WIFI
+ 248           * @param       ssid: WIFI名称
+ 249           *              pwd : WIFI密码
+ 250           * @retval      ATK_MW8266D_EOK  : WIFI连接成功
+ 251           *              ATK_MW8266D_ERROR: WIFI连接失败
+ 252           */
+ 253          uint8 atk_mw8266d_join_ap(char *ssid, char *pwd)
+ 254          {
+ 255   1          uint8 ret;
+ 256   1          char cmd[64];
+ 257   1      
+ 258   1          sprintf(cmd, "AT+CWJAP=\"%s\",\"%s\"", ssid, pwd);
+ 259   1          ret = atk_mw8266d_send_at_cmd(cmd, "WIFI GOT IP", 10000);
+ 260   1          if (ret == ATK_MW8266D_EOK) {
+ 261   2              return ATK_MW8266D_EOK;
+ 262   2          } else {
+ 263   2              return ATK_MW8266D_ERROR;
+ 264   2          }
+ 265   1      }
+ 266          
+ 267          /**
+ 268           * @brief       ATK-MW8266D获取IP地址
+ 269           * @param       buf: IP地址，需要16字节内存空间
+ 270           * @retval      ATK_MW8266D_EOK  : 获取IP地址成功
+ 271           *              ATK_MW8266D_ERROR: 获取IP地址失败
+ 272           */
+ 273          uint8 atk_mw8266d_get_ip(char *buf)
+ 274          {
+ 275   1          uint8 ret;
+ 276   1          char *p_start;
+ 277   1          char *p_end;
+ 278   1      
+ 279   1          ret = atk_mw8266d_send_at_cmd("AT+CIFSR", "OK", 500);
+ 280   1          if (ret != ATK_MW8266D_EOK) {
+ 281   2              return ATK_MW8266D_ERROR;
+ 282   2          }
+ 283   1      
+ 284   1          p_start = strstr((const char *)atk_mw8266d_uart_rx_get_frame(), "\"");
+ 285   1          p_end   = strstr(p_start + 1, "\"");
+ 286   1          *p_end  = '\0';
+ 287   1          sprintf(buf, "%s", p_start + 1);
+ 288   1      
+ 289   1          return ATK_MW8266D_EOK;
+ 290   1      }
+ 291          
+ 292          /**
+ 293           * @brief       ATK-MW8266D连接TCP服务器
+ 294           * @param       server_ip  : TCP服务器IP地址
+ 295           *              server_port: TCP服务器端口号
+ 296           * @retval      ATK_MW8266D_EOK  : 连接TCP服务器成功
+ 297           *              ATK_MW8266D_ERROR: 连接TCP服务器失败
+ 298           */
+ 299          uint8 atk_mw8266d_connect_tcp_server(char *server_ip, char *server_port)
+ 300          {
+C51 COMPILER V9.60.0.0   ATK_MW8266D                                                       12/08/2023 20:31:23 PAGE 6   
+
+ 301   1          uint8 ret;
+ 302   1          char cmd[64];
+ 303   1      
+ 304   1          sprintf(cmd, "AT+CIPSTART=\"TCP\",\"%s\",%s", server_ip, server_port);
+ 305   1          ret = atk_mw8266d_send_at_cmd(cmd, "CONNECT", 5000);
+ 306   1          if (ret == ATK_MW8266D_EOK) {
+ 307   2              return ATK_MW8266D_EOK;
+ 308   2          } else {
+ 309   2              return ATK_MW8266D_ERROR;
+ 310   2          }
+ 311   1      }
+ 312          
+ 313          /**
+ 314           * @brief       ATK-MW8266D进入透传
+ 315           * @param       无
+ 316           * @retval      ATK_MW8266D_EOK  : 进入透传成功
+ 317           *              ATK_MW8266D_ERROR: 进入透传失败
+ 318           */
+ 319          uint8 atk_mw8266d_enter_unvarnished(void)
+ 320          {
+ 321   1          uint8 ret;
+ 322   1      
+ 323   1          ret = atk_mw8266d_send_at_cmd("AT+CIPMODE=1", "OK", 500);
+ 324   1          ret += atk_mw8266d_send_at_cmd("AT+CIPSEND", ">", 500);
+ 325   1          if (ret == ATK_MW8266D_EOK) {
+ 326   2              return ATK_MW8266D_EOK;
+ 327   2          } else {
+ 328   2              return ATK_MW8266D_ERROR;
+ 329   2          }
+ 330   1      }
+ 331          
+ 332          /**
+ 333           * @brief       ATK-MW8266D退出透传
+ 334           * @param       无
+ 335           * @retval      无
+ 336           */
+ 337          void atk_mw8266d_exit_unvarnished(void)
+ 338          {
+ 339   1          atk_mw8266d_uart_printf("+++");
+ 340   1      }
+ 341          
+ 342          /**
+ 343           * @brief       ATK-MW8266D连接原子云服务器
+ 344           * @param       id : 原子云设备编号
+ 345           *              pwd: 原子云设备密码
+ 346           * @retval      ATK_MW8266D_EOK  : 连接原子云服务器成功
+ 347           *              ATK_MW8266D_ERROR: 连接原子云服务器失败
+ 348           */
+ 349          uint8 atk_mw8266d_connect_atkcld(char *id, char *pwd)
+ 350          {
+ 351   1          uint8 ret;
+ 352   1          char cmd[64];
+ 353   1      
+ 354   1          sprintf(cmd, "AT+ATKCLDSTA=\"%s\",\"%s\"", id, pwd);
+ 355   1          ret = atk_mw8266d_send_at_cmd(cmd, "CLOUD CONNECTED", 10000);
+ 356   1          if (ret == ATK_MW8266D_EOK) {
+ 357   2              return ATK_MW8266D_EOK;
+ 358   2          } else {
+ 359   2              return ATK_MW8266D_ERROR;
+ 360   2          }
+ 361   1      }
+ 362          
+C51 COMPILER V9.60.0.0   ATK_MW8266D                                                       12/08/2023 20:31:23 PAGE 7   
+
+ 363          /**
+ 364           * @brief       ATK-MW8266D断开原子云服务器连接
+ 365           * @param       无
+ 366           * @retval      ATK_MW8266D_EOK  : 断开原子云服务器连接成功
+ 367           *              ATK_MW8266D_ERROR: 断开原子云服务器连接失败
+ 368           */
+ 369          uint8 atk_mw8266d_disconnect_atkcld(void)
+ 370          {
+ 371   1          uint8 ret;
+ 372   1      
+ 373   1          ret = atk_mw8266d_send_at_cmd("AT+ATKCLDCLS", "CLOUD DISCONNECT", 500);
+ 374   1          if (ret == ATK_MW8266D_EOK) {
+ 375   2              return ATK_MW8266D_EOK;
+ 376   2          } else {
+ 377   2              return ATK_MW8266D_ERROR;
+ 378   2          }
+ 379   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1257    ----
+   CONSTANT SIZE    =    259    ----
+   XDATA SIZE       =   ----     233
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)

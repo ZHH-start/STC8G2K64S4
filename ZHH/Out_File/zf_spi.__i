@@ -1,0 +1,1 @@
+"..\Libraries\seekfree_libraries\zf_spi.c" LARGE OMF2 OPTIMIZE (8,SPEED) BROWSE INCDIR(..\Libraries\libraries;..\Libraries\seekfree_libraries;..\Libraries\seekfree_peripheral;..\USER;..\CODE) DEBUG PRINT(.\Out_File\zf_spi.lst) TABS (2) OBJECT(.\Out_File\zf_spi.obj)
