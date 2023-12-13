@@ -224,13 +224,13 @@
         "name": "user",
         "files": [
           {
+            "path": "ZHH/USER/main.c"
+          },
+          {
             "path": "ZHH/USER/isr.c"
           },
           {
             "path": "ZHH/USER/isr.h"
-          },
-          {
-            "path": "ZHH/USER/main.c"
           }
         ],
         "folders": []
@@ -241,11 +241,14 @@
   "deviceName": null,
   "packDir": null,
   "miscInfo": {
-    "uid": "25fe1bbd3d249507ea240bab927d3465"
+    "uid": "024c4f6d7b181ff6bdf97599151061f4"
   },
   "targets": {
     "STC8G2K64S4": {
-      "excludeList": [],
+      "excludeList": [
+        "<virtual_root>/seekfree_peripheral/atk_mw8266d_uart.c",
+        "<virtual_root>/seekfree_peripheral/atk_mw8266d.c"
+      ],
       "toolchain": "Keil_C51",
       "compileConfig": {
         "options": "null"
@@ -260,11 +263,10 @@
       "custom_dep": {
         "name": "default",
         "incList": [
-          "../../Keil_v5_C51/C51/INC/STC",
+          "c:/Keil_v5_C51/C51/INC/STC",
           "Libraries/libraries",
           "Libraries/seekfree_libraries",
           "Libraries/seekfree_peripheral",
-          "../../USER",
           "CODE",
           "ZHH/USER"
         ],
