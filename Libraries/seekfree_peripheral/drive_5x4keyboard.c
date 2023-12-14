@@ -59,23 +59,23 @@ int Vertical_scanning()
     P44 = 1;
     if (P32 == 0) {
         delay_ms(43);
-        if (P32 == 0) return 14;
+        if (P32 == 0) return 27;
     }
     if (P34 == 0) {
         delay_ms(43);
-        if (P34 == 0) return 33;
+        if (P34 == 0) return 1;
     }
     if (P36 == 0) {
         delay_ms(43);
-        if (P36 == 0) return 57;
+        if (P36 == 0) return 4;
     }
     if (P42 == 0) {
         delay_ms(43);
-        if (P42 == 0) return 44;
+        if (P42 == 0) return 7;
     }
     if (P44 == 0) {
         delay_ms(43);
-        if (P44 == 0) return 83;
+        if (P44 == 0) return 17;
     }
 
     return 0;
@@ -94,26 +94,26 @@ int Horizontal_scanning()
     P44 = 0;
     if (P27 == 0) {
         delay_ms(43);
-        if (P27 == 0) return 1;
+        if (P27 == 0) return 0;
     }
     if (P25 == 0) {
         delay_ms(43);
-        if (P25 == 0) return 7;
+        if (P25 == 0) return 1;
     }
     if (P23 == 0) {
         delay_ms(43);
-        if (P23 == 0) return 11;
+        if (P23 == 0) return 2;
     }
     if (P21 == 0) {
         delay_ms(43);
-        if (P21 == 0) return 29;
+        if (P21 == 0) return 9;
     }
 
     return 0;
 }
 
 int key_scan()
-{;
+{
     return Horizontal_scanning() + Vertical_scanning();
 }
 

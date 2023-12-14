@@ -6,7 +6,8 @@
 #include "board.h"
 
 uint16 DHT_receive_data[4];
-sbit Data = P0 ^ 4; // 数据线
+uint16 DHT_read_count = 0;      // DHT读标志位，DHT读写间隔必须大于1s以上
+sbit Data             = P0 ^ 4; // 数据线
 
 // 主机发送开始信号
 void DHT11_Start(void)
