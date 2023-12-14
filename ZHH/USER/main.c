@@ -13,7 +13,7 @@ void ESP8266_init(void)
         pca_delay_ms(1000);
     }
     uart_putstr(UART_3, "AT+ATKCLDSTA=\"37740342569263156939\",\"01234567\"\r\n", 48);
-    i=6;
+    i = 6;
     while (i-- > 0) {
         pca_delay_ms(1000);
     }
