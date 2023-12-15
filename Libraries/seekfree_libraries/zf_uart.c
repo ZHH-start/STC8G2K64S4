@@ -185,7 +185,7 @@ void uart_init(UARTN_enum uart_n, UARTPIN_enum uart_rx_pin, UARTPIN_enum uart_tx
 
 //-------------------------------------------------------------------------------------------------------------------
 //  @brief      串口字节输出
-//  @param      uart_n          串口模块号(USART_1,USART_2,USART_3,USART_4)
+//  @param      uart_n          串口模块号(UART_1,UART_2,UART_3,UART_4)
 //  @param      dat             需要发送的字节
 //  @return     void        
 //  Sample usage:               uart_putchar(UART_1,0xA5);       // 串口1发送0xA5
