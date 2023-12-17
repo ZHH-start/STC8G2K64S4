@@ -7,12 +7,12 @@ void ESP8266_init(void)
     uart_putstr(UART_3, "AT+CWMODE=1\r\n", 13);
     // printf("open wifi init");
     pca_delay_ms(10);
-    uart_putstr(UART_3, "AT+CWJAP=\"ZHH-xiaomi12s\",\"yae73rw1\"\r\n", 37);
+    uart_putstr(UART_3, "AT+CWJAP=\"\",\"\"\r\n", 37);
     // printf("write wifi SSID and passport");
     while (i-- > 0) {
         pca_delay_ms(1000);
     }
-    uart_putstr(UART_3, "AT+ATKCLDSTA=\"37740342569263156939\",\"01234567\"\r\n", 48);
+    uart_putstr(UART_3, "AT+ATKCLDSTA=\"\",\"\"\r\n", 48);
     i = 6;
     while (i-- > 0) {
         pca_delay_ms(1000);
