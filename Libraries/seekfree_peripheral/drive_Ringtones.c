@@ -1,7 +1,6 @@
 #include "drive_Ringtones.h"
 #include "zf_gpio.h"
 
-sbit GND_ringtone = P4 ^ 0;
 sbit rin          = P4 ^ 7;
 
 void Ringtones_open()
@@ -16,7 +15,5 @@ void Ringtones_close()
 
 void Ringtones_init()
 {
-    gpio_mode(P40, GPO_PP);
-    GND_ringtone = 0;
-    rin          = 0;
+    rin          = 1;
 }

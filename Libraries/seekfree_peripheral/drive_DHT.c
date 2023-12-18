@@ -55,7 +55,7 @@ void DHT11_REC_Data(void)
     unsigned int R_H, R_L, T_H, T_L;
     unsigned char RH, RL, TH, TL, CHECK;
 
-    // DisableGlobalIRQ();
+    // DisableGlobalIRQ(); // 关闭总中断
     DHT11_Start(); // 主机发送信号
 
     if (Data == 0) // 判断DHT11是否响应
@@ -89,7 +89,7 @@ void DHT11_REC_Data(void)
         }
     }
 
-    // EnableGlobalIRQ();
+    // EnableGlobalIRQ(); // 打开总中断
 
     DHT_receive_data[0] = RH;
     DHT_receive_data[1] = RL;
