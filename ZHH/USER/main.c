@@ -32,26 +32,27 @@ void main()
     // DEBUG串口（串口1）初始化,波特率115200
     iic_init(IIC_1, IIC1_SCL_P15, IIC1_SDA_P14, 0xe8);
     OLED_Init();
-    ESP8266_init();
+    // ESP8266_init();
     Ringtones_init();
 
     while (1) {
-        DHT11_REC_Data();
+        // DHT11_REC_Data();
 
         printf("温度：%d\r\n", DHT_receive_data[2]);
         printf("湿度：%d\r\n", DHT_receive_data[0]);
 
-        sprintf(str, "温度:%d", DHT_receive_data[2]);
-        uart_putstr(UART_3, str, 7);
-        sprintf(str, "湿度:%d", DHT_receive_data[0]);
-        uart_putstr(UART_3, str, 7);
+        // sprintf(str, "温度:%d", DHT_receive_data[2]);
+        // uart_putstr(UART_3, str, 7);
+        // sprintf(str, "湿度:%d", DHT_receive_data[0]);
+        // uart_putstr(UART_3, str, 7);
 
-        WS_OLED_Printf(0, 0, 0, "temperature:%d", DHT_receive_data[2]);
-        WS_OLED_Printf(0, 1, 0, "humidity:%d", DHT_receive_data[0]);
+        // WS_OLED_Printf(0, 0, 0, "temperature:%d", DHT_receive_data[2]);
+        // WS_OLED_Printf(0, 1, 0, "humidity:%d", DHT_receive_data[0]);
 
         // printf("keyscanvalue:%d\r\n", key_scan());
-        Ringtones_close();
-        pca_delay_ms(1000);
-        Ringtones_open();
+        // Ringtones_close();
+        DHT_read_count++;
+        pca_delay_ms(50);
+        // Ringtones_open();
     }
 }
