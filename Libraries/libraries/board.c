@@ -110,7 +110,6 @@ void board_init(void)
     CL     = 0;
     CH     = 0;
     P_SW2 |= 0x80;
-    printf("oled_init");
 }
 
 #if (1 == PRINTF_ENABLE) // 初始化调试串口

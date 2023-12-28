@@ -87,7 +87,7 @@ void DHT11_REC_Data(void)
             TH = T_H;
             TL = T_L;
         }
-        WS_OLED_Printf(2, 0, 0, "DHT close");
+        // WS_OLED_Printf(2, 0, 0, "DHT close");
     }
 
     // EnableGlobalIRQ(); // 打开总中断
