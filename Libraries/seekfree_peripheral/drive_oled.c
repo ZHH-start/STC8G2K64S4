@@ -1339,14 +1339,14 @@ void OLED_Init(void)
     pca_delay_ms(200);
 
     // printf("oled_init");
-    WS_OLED_Printf(0, 0, 0, "temperature:");
-    WS_OLED_Printf(0, 1, 0, "humidity:");
-    WS_OLED_Printf(0, 2, 0, "set temperature:");
-    WS_OLED_Printf(0, 3, 0, "set humidity:");
+    // WS_OLED_Printf(0, 0, 0, "temperature:");
+    // WS_OLED_Printf(0, 1, 0, "humidity:");
+    // WS_OLED_Printf(0, 2, 0, "set temperature:");
+    // WS_OLED_Printf(0, 3, 0, "set humidity:");
 
-    WS_OLED_Printf(0, 4, 0, "SSID:");
-    WS_OLED_Printf(0, 5, 0, "WIFI Connect:");
-    WS_OLED_Printf(0, 6, 0, "AtomCloud connect:");
+    // WS_OLED_Printf(0, 4, 0, "SSID:");
+    // WS_OLED_Printf(0, 5, 0, "WIFI Connect:");
+    // WS_OLED_Printf(0, 6, 0, "AtomCloud connect:");
     // WS_OLED_Printf(0, 7, 0, "Connection status:");
 
     // WS_OLED_Printf(0, 0, 1, "OLED 8*16 TEST   ");

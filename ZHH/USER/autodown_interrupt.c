@@ -79,7 +79,6 @@ void Uart4Isr() interrupt 18
 	}
 }
 
-// #define LED P52
 //PCA周期定时器中断
 void PCA_Isr() interrupt 7
 {

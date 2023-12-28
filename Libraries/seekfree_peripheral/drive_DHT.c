@@ -78,7 +78,6 @@ void DHT11_REC_Data(void)
         delay_us(22); // 这里延时55us
         if (Data == 1)
             ;
-        // WS_OLED_Printf(1, 0, 0, "DHT close");
         // 随后总线由上拉电阻拉高进入空闲状态。
 
         if (R_H + R_L + T_H + T_L == CHECK) // 和检验位对比，判断校验接收到的数据是否正确
@@ -88,6 +87,7 @@ void DHT11_REC_Data(void)
             TH = T_H;
             TL = T_L;
         }
+        WS_OLED_Printf(2, 0, 0, "DHT close");
     }
 
     // EnableGlobalIRQ(); // 打开总中断
